@@ -1,0 +1,65 @@
+{
+  "train": {
+    "Bacterial Blight": {
+      "lab": 153,
+      "field": 329
+    },
+    "Blast": {
+      "lab": 138,
+      "field": 1209
+    },
+    "Brown Spot": {
+      "lab": 62,
+      "field": 667
+    },
+    "Tungro": {
+      "lab": 83,
+      "field": 756
+    },
+    "Healthy": {
+      "field": 1224
+    }
+  },
+  "val": {
+    "Bacterial Blight": {
+      "lab": 32,
+      "field": 70
+    },
+    "Blast": {
+      "lab": 29,
+      "field": 259
+    },
+    "Brown Spot": {
+      "lab": 13,
+      "field": 142
+    },
+    "Tungro": {
+      "lab": 17,
+      "field": 162
+    },
+    "Healthy": {
+      "field": 262
+    }
+  },
+  "test": {
+    "Bacterial Blight": {
+      "lab": 34,
+      "field": 72
+    },
+    "Blast": {
+      "lab": 31,
+      "field": 260
+    },
+    "Brown Spot": {
+      "lab": 15,
+      "field": 144
+    },
+    "Tungro": {
+      "lab": 19,
+      "field": 162
+    },
+    "Healthy": {
+      "field": 263
+    }
+  }
+}

@@ -1,0 +1,137 @@
+  {
+    "version": 1,
+    "author": "SIH PS 26180 - Smart Farm Sentinel (MicroPython)",
+    "editor": "wokwi",
+    "parts": [
+      { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+
+      { "type": "wokwi-potentiometer", "id": "soilA", "top": -210, "left": -400,
+        "attrs": { "value": "340" } },
+      { "type": "wokwi-potentiometer", "id": "soilB", "top": -210, "left": -250,
+        "attrs": { "value": "300" } },
+      { "type": "wokwi-potentiometer", "id": "ph", "top": -210, "left": -100,
+        "attrs": { "value": "560" } },
+      { "type": "wokwi-potentiometer", "id": "ec", "top": -210, "left": 50,
+        "attrs": { "value": "260" } },
+      { "type": "wokwi-potentiometer", "id": "vision", "top": -210, "left": 200,
+        "attrs": { "value": "120" } },
+
+      { "type": "wokwi-dht22", "id": "dht", "top": -40, "left": -400,
+        "attrs": { "temperature": "34", "humidity": "62" } },
+      { "type": "wokwi-ds18b20", "id": "soilTemp", "top": 90, "left": -400,
+        "attrs": { "temperature": "26" } },
+      { "type": "wokwi-photoresistor-sensor", "id": "ldr", "top": 200, "left": -400,
+        "attrs": {} },
+      { "type": "wokwi-hc-sr04", "id": "tank", "top": -40, "left": 260,
+        "attrs": { "distance": "34" } },
+
+      { "type": "wokwi-ssd1306", "id": "oled", "top": 90, "left": 270,
+        "attrs": { "i2cAddress": "0x3c" } },
+
+      { "type": "wokwi-lcd2004", "id": "lcd", "top": 430, "left": -230,
+        "attrs": { "pins": "i2c", "background": "green" } },
+
+      { "type": "wokwi-pushbutton", "id": "btnRain", "top": 300, "left": -400,
+        "attrs": { "color": "blue", "label": "RAIN" } },
+      { "type": "wokwi-pushbutton", "id": "btnNet", "top": 300, "left": -270,
+        "attrs": { "color": "green", "label": "NET" } },
+      { "type": "wokwi-pushbutton", "id": "btnFault", "top": 300, "left": -140,
+        "attrs": { "color": "red", "label": "FAULT" } },
+
+      { "type": "wokwi-relay-module", "id": "valve", "top": 190, "left": 60,
+        "attrs": {} },
+      { "type": "wokwi-buzzer", "id": "buzz", "top": 300, "left": 200,
+        "attrs": { "volume": "0.1" } },
+
+      { "type": "wokwi-led", "id": "ledValve", "top": 210, "left": 200,
+        "attrs": { "color": "blue", "label": "VALVE" } },
+      { "type": "wokwi-led", "id": "ledAlert", "top": 210, "left": 260,
+        "attrs": { "color": "red", "label": "ALERT" } },
+      { "type": "wokwi-led", "id": "ledEdge", "top": 210, "left": 320,
+        "attrs": { "color": "green", "label": "EDGE" } },
+
+      { "type": "wokwi-resistor", "id": "r1", "top": 260, "left": 200, "attrs": { "value": "220" } },
+      { "type": "wokwi-resistor", "id": "r2", "top": 260, "left": 260, "attrs": { "value": "220" } },
+      { "type": "wokwi-resistor", "id": "r3", "top": 260, "left": 320, "attrs": { "value": "220" } },
+      { "type": "wokwi-resistor", "id": "rOW", "top": 130, "left": -330, "attrs": { "value": "4700" } }
+    ],
+
+    "connections": [
+      [ "esp:3V3", "soilA:VCC", "red", [] ],
+      [ "esp:GND.1", "soilA:GND", "black", [] ],
+      [ "soilA:SIG", "esp:D34", "green", [] ],
+
+      [ "esp:3V3", "soilB:VCC", "red", [] ],
+      [ "esp:GND.1", "soilB:GND", "black", [] ],
+      [ "soilB:SIG", "esp:D35", "green", [] ],
+
+      [ "esp:3V3", "ph:VCC", "red", [] ],
+      [ "esp:GND.1", "ph:GND", "black", [] ],
+      [ "ph:SIG", "esp:D32", "green", [] ],
+
+      [ "esp:3V3", "ec:VCC", "red", [] ],
+      [ "esp:GND.1", "ec:GND", "black", [] ],
+      [ "ec:SIG", "esp:VN", "green", [] ],
+
+      [ "esp:3V3", "vision:VCC", "red", [] ],
+      [ "esp:GND.1", "vision:GND", "black", [] ],
+      [ "vision:SIG", "esp:D33", "green", [] ],
+
+      [ "esp:3V3", "dht:VCC", "red", [] ],
+      [ "esp:GND.2", "dht:GND", "black", [] ],
+      [ "dht:SDA", "esp:D15", "green", [] ],
+
+      [ "esp:3V3", "soilTemp:VDD", "red", [] ],
+      [ "esp:GND.2", "soilTemp:GND", "black", [] ],
+      [ "soilTemp:DQ", "esp:D14", "yellow", [] ],
+      [ "rOW:1", "esp:D14", "gray", [] ],
+      [ "rOW:2", "esp:3V3", "red", [] ],
+
+      [ "esp:3V3", "ldr:VCC", "red", [] ],
+      [ "esp:GND.2", "ldr:GND", "black", [] ],
+      [ "ldr:AO", "esp:VP", "green", [] ],
+
+      [ "esp:3V3", "tank:VCC", "red", [] ],
+      [ "esp:GND.2", "tank:GND", "black", [] ],
+      [ "tank:TRIG", "esp:D26", "orange", [] ],
+      [ "tank:ECHO", "esp:D27", "purple", [] ],
+
+      [ "esp:3V3", "oled:VCC", "red", [] ],
+      [ "esp:GND.3", "oled:GND", "black", [] ],
+      [ "esp:D21", "oled:SDA", "orange", [] ],
+      [ "esp:D22", "oled:SCL", "yellow", [] ],
+
+      [ "esp:3V3", "lcd:VCC", "red", [] ],
+      [ "esp:GND.3", "lcd:GND", "black", [] ],
+      [ "esp:D21", "lcd:SDA", "orange", [] ],
+      [ "esp:D22", "lcd:SCL", "yellow", [] ],
+
+      [ "btnRain:1.l", "esp:GND.2", "black", [] ],
+      [ "btnRain:2.l", "esp:D4", "blue", [] ],
+      [ "btnNet:1.l", "esp:GND.2", "black", [] ],
+      [ "btnNet:2.l", "esp:D5", "green", [] ],
+      [ "btnFault:1.l", "esp:GND.2", "black", [] ],
+      [ "btnFault:2.l", "esp:D13", "red", [] ],
+
+      [ "esp:3V3", "valve:VCC", "red", [] ],
+      [ "esp:GND.3", "valve:GND", "black", [] ],
+      [ "esp:D25", "valve:IN", "blue", [] ],
+
+      [ "esp:D2", "buzz:1", "purple", [] ],
+      [ "buzz:2", "esp:GND.3", "black", [] ],
+
+      [ "esp:D18", "ledValve:A", "blue", [] ],
+      [ "ledValve:C", "r1:1", "black", [] ],
+      [ "r1:2", "esp:GND.3", "black", [] ],
+
+      [ "esp:D19", "ledAlert:A", "red", [] ],
+      [ "ledAlert:C", "r2:1", "black", [] ],
+      [ "r2:2", "esp:GND.3", "black", [] ],
+
+      [ "esp:D23", "ledEdge:A", "green", [] ],
+      [ "ledEdge:C", "r3:1", "black", [] ],
+      [ "r3:2", "esp:GND.3", "black", [] ]
+    ],
+
+    "dependencies": {}
+  }

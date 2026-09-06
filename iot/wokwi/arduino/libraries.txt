@@ -1,0 +1,6 @@
+# Wokwi library manifest — paste into the "Library Manager" tab, or keep this
+# file next to diagram.json and sketch.ino in the project.
+DHT sensor library
+Adafruit Unified Sensor
+Adafruit SSD1306
+Adafruit GFX Library

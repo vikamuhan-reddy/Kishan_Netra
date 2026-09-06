@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KisanNetra — Edge AI Farm Sentinel Dashboard</title>
+<meta name="description" content="KisanNetra: PS 26180 SIH 2026 edge-AI dashboard for rice disease detection, nutrient analysis and irrigation management in Thanjavur, Tamil Nadu."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:         #0a0f1e;
+    --surface:    #111827;
+    --surface2:   #1a2235;
+    --border:     rgba(255,255,255,0.07);
+    --accent:     #22c55e;
+    --accent-dim: rgba(34,197,94,0.15);
+    --warn:       #f59e0b;
+    --warn-dim:   rgba(245,158,11,0.15);
+    --danger:     #ef4444;
+    --danger-dim: rgba(239,68,68,0.15);
+    --info:       #3b82f6;
+    --info-dim:   rgba(59,130,246,0.15);
+    --text:       #f1f5f9;
+    --text-muted: #64748b;
+    --mono:       'JetBrains Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── Top Nav ─────────────────────────────────────── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem;
+    height: 56px;
+    background: rgba(10,15,30,0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; }
+  .logo-leaf { font-size: 1.4rem; }
+  .nav-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    font-size: 0.65rem; font-weight: 600; padding: 3px 8px;
+    border-radius: 999px; letter-spacing: 0.05em; text-transform: uppercase;
+    border: 1px solid;
+  }
+  .badge-real    { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+  .badge-sim     { color: var(--warn);   border-color: var(--warn);   background: var(--warn-dim); }
+  .badge-notrun  { color: var(--text-muted); border-color: var(--text-muted); background: rgba(100,116,139,0.1); }
+
+  /* ── Offline Toggle ───────────────────────────────── */
+  .offline-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.6rem 2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .offline-label { font-size: 0.8rem; color: var(--text-muted); }
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #334155; border-radius: 999px; transition: 0.3s;
+  }
+  .slider::before {
+    content: ''; position: absolute; width: 16px; height: 16px; left: 4px; top: 4px;
+    background: white; border-radius: 50%; transition: 0.3s;
+  }
+  input:checked + .slider { background: var(--accent); }
+  input:checked + .slider::before { transform: translateX(20px); }
+  .mode-text { font-size: 0.85rem; font-weight: 600; }
+  .mode-online  { color: var(--info); }
+  .mode-offline { color: var(--accent); }
+
+  /* ── Grid ─────────────────────────────────────────── */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 1.25rem;
+    padding: 1.5rem 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1100px) { .dashboard { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 700px)  { .dashboard { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 0 0 1px rgba(34,197,94,0.25); }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+  .card-body { padding: 1.25rem; }
+
+  /* ── Camera Panel ─────────────────────────────────── */
+  .camera-panel { grid-row: span 1; }
+  .image-drop {
+    width: 100%; aspect-ratio: 4/3;
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; gap: 8px; transition: border-color 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .image-drop:hover { border-color: var(--accent); }
+  .image-drop img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 10px;
+  }
+  .drop-hint { font-size: 0.8rem; color: var(--text-muted); text-align: center; }
+  .drop-icon { font-size: 2rem; }
+  #fileInput { display: none; }
+
+  .result-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 1rem; gap: 8px;
+  }
+  .disease-chip {
+    font-size: 0.9rem; font-weight: 700;
+    padding: 6px 14px; border-radius: 999px;
+    transition: all 0.3s;
+  }
+  .chip-healthy  { background: var(--accent-dim); color: var(--accent); }
+  .chip-disease  { background: var(--danger-dim); color: var(--danger); }
+  .chip-blast    { background: var(--warn-dim);   color: var(--warn); }
+  .chip-pending  { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+
+  .confidence-bar-wrap { flex: 1; }
+  .conf-label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px; }
+  .confidence-bar {
+    height: 8px; background: var(--surface2); border-radius: 999px; overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%; border-radius: 999px; transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    background: linear-gradient(90deg, var(--accent), #86efac);
+  }
+  .confidence-fill.warn { background: linear-gradient(90deg, var(--warn), #fcd34d); }
+  .confidence-fill.danger { background: linear-gradient(90deg, var(--danger), #fca5a5); }
+
+  .run-btn {
+    width: 100%; margin-top: 0.75rem; padding: 10px;
+    background: var(--accent); color: #052e16; font-weight: 700; font-size: 0.9rem;
+    border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.2s;
+  }
+  .run-btn:hover { opacity: 0.85; }
+  .run-btn:disabled { background: #334155; color: var(--text-muted); cursor: not-allowed; }
+
+  /* ── Sensor Panel ─────────────────────────────────── */
+  .sensor-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+  }
+  .sensor-item {
+    background: var(--surface2); border-radius: 10px; padding: 0.75rem;
+    border: 1px solid var(--border);
+  }
+  .sensor-name { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .sensor-val  { font-size: 1.3rem; font-weight: 700; font-family: var(--mono); margin: 2px 0; }
+  .sensor-unit { font-size: 0.7rem; color: var(--text-muted); }
+  .sensor-status-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px;
+  }
+  .dot-valid { background: var(--accent); }
+  .dot-stale { background: var(--warn); }
+  .dot-failed { background: var(--danger); }
+
+  .refresh-btn {
+    width: 100%; margin-top: 0.75rem; padding: 8px;
+    background: transparent; color: var(--info); border: 1px solid var(--info);
+    font-weight: 600; font-size: 0.82rem; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  }
+  .refresh-btn:hover { background: var(--info-dim); }
+
+  /* ── Rule Engine / Explainability Panel ──────────── */
+  .rule-panel { grid-column: span 1; }
+  .alert-item {
+    background: var(--surface2); border-radius: 10px; padding: 0.85rem;
+    border-left: 3px solid; margin-bottom: 0.6rem;
+    animation: fadeIn 0.4s ease;
+  }
+  .alert-title { font-size: 0.78rem; font-weight: 700; margin-bottom: 3px; }
+  .alert-msg   { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+  .alert-green  { border-color: var(--accent); }
+  .alert-yellow { border-color: var(--warn); }
+  .alert-red    { border-color: var(--danger); }
+  .alert-blue   { border-color: var(--info); }
+  .alert-gray   { border-color: var(--text-muted); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Irrigation Panel ─────────────────────────────── */
+  .irrigation-action {
+    text-align: center; padding: 1.5rem 1rem;
+    border-radius: 12px; font-size: 1.4rem; font-weight: 800;
+    margin-bottom: 0.75rem; transition: all 0.4s;
+  }
+  .irrigate { background: var(--info-dim); color: var(--info); border: 1px solid var(--info); }
+  .hold     { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+  .blocked  { background: var(--danger-dim); color: var(--danger); border: 1px solid var(--danger); }
+
+  .moisture-bar { margin: 6px 0; }
+  .mb-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .mb-label { font-size: 0.72rem; color: var(--text-muted); min-width: 90px; }
+  .mb-track { flex: 1; height: 10px; background: var(--surface2); border-radius: 999px; overflow: hidden; }
+  .mb-fill { height: 100%; border-radius: 999px; transition: width 0.6s; }
+  .mb-val { font-size: 0.72rem; font-family: var(--mono); min-width: 35px; text-align: right; }
+
+  /* ── Disease Fusion Panel ─────────────────────────── */
+  .fusion-risk {
+    display: flex; align-items: center; gap: 12px;
+    padding: 1rem; border-radius: 12px; margin-bottom: 0.75rem;
+    transition: all 0.4s;
+  }
+  .risk-icon { font-size: 2rem; }
+  .risk-HIGH   { background: var(--danger-dim); border: 1px solid var(--danger); }
+  .risk-MEDIUM { background: var(--warn-dim);   border: 1px solid var(--warn); }
+  .risk-LOW    { background: var(--surface2);    border: 1px solid var(--border); }
+  .risk-NONE   { background: var(--accent-dim);  border: 1px solid var(--accent); }
+  .risk-label  { font-size: 1rem; font-weight: 800; }
+  .risk-sub    { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* ── Model Info Bar ──────────────────────────────── */
+  .model-meta {
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface2); border-top: 1px solid var(--border);
+    font-size: 0.72rem; color: var(--text-muted);
+  }
+  .meta-item strong { color: var(--text); }
+
+  /* ── Session Log ─────────────────────────────────── */
+  .log-area {
+    background: var(--surface2); border-radius: 8px;
+    padding: 0.75rem; height: 140px; overflow-y: auto;
+    font-family: var(--mono); font-size: 0.7rem; color: #94a3b8;
+    border: 1px solid var(--border);
+  }
+  .log-line { margin-bottom: 2px; }
+  .log-time { color: var(--text-muted); }
+  .log-ok   { color: var(--accent); }
+  .log-warn { color: var(--warn); }
+  .log-err  { color: var(--danger); }
+
+  /* ── Scrollbar ───────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+  /* ── Spinner ─────────────────────────────────────── */
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .footer {
+    text-align: center; padding: 1.5rem;
+    color: var(--text-muted); font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">
+    <span class="logo-leaf">🌾</span>
+    <span>KisanNetra</span>
+    <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400">PS 26180 · SIH 2026</span>
+  </div>
+  <div class="nav-badges">
+    <span class="badge badge-real"   id="badge-model">CAMERA MODEL: REAL</span>
+    <span class="badge badge-sim"    id="badge-sensor">SENSOR DATA: SIMULATED</span>
+    <span class="badge badge-notrun" id="badge-qcom">QUALCOMM EXECUTION: NOT RUN</span>
+  </div>
+</nav>
+
+<!-- ── Mode Bar ───────────────────────────────────────────── -->
+<div class="offline-bar">
+  <span class="offline-label">Connectivity mode — in OFFLINE mode, all inference and decisions remain local on the edge device</span>
+  <div class="toggle-wrap">
+    <span id="modeLabel" class="mode-text mode-offline">OFFLINE</span>
+    <label class="toggle" for="modeToggle">
+      <input type="checkbox" id="modeToggle"/>
+      <span class="slider"></span>
+    </label>
+    <span style="font-size:0.8rem;color:var(--text-muted)">ONLINE</span>
+  </div>
+</div>
+
+<!-- ── Dashboard Grid ─────────────────────────────────────── -->
+<div class="dashboard">
+
+  <!-- Camera Panel -->
+  <div class="card camera-panel">
+    <div class="card-header">
+      <span class="card-title">Disease Detection</span>
+      <span class="badge badge-real" id="badge-model-card">CAMERA MODEL: REAL</span>
+    </div>
+    <div class="card-body">
+      <div class="image-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <span class="drop-icon">📷</span>
+        <span class="drop-hint">Click or drop a rice leaf image<br>to run the trained classifier</span>
+      </div>
+      <input type="file" id="fileInput" accept="image/*"/>
+
+      <div class="result-row">
+        <span class="disease-chip chip-pending" id="diseaseChip">—</span>
+        <div class="confidence-bar-wrap">
+          <div class="conf-label" id="confLabel">Confidence</div>
+          <div class="confidence-bar"><div class="confidence-fill" id="confFill" style="width:0%"></div></div>
+        </div>
+        <span style="font-family:var(--mono);font-size:0.85rem" id="confPct">—</span>
+      </div>
+
+      <button class="run-btn" id="runBtn" onclick="runInference()" disabled>
+        Load image to classify
+      </button>
+    </div>
+    <div class="model-meta">
+      <span><strong>Model</strong> MobileNetV3-Small (ImageNet → fine-tuned)</span>
+      <span><strong>Val Acc</strong> 87.32%</span>
+      <span><strong>Macro F1</strong> 0.8627</span>
+      <span><strong>Classes</strong> 5</span>
+    </div>
+  </div>
+
+  <!-- Sensor Panel -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Sensor Readings</span>
+      <span class="badge badge-sim">SIMULATED</span>
+    </div>
+    <div class="card-body">
+      <div class="sensor-grid" id="sensorGrid">
+        <!-- populated by JS -->
+      </div>
+      <button class="refresh-btn" onclick="refreshSensors()">&#x21bb; Refresh Mock Reading</button>
+    </div>
+  </div>
+
+  <!-- Rule Engine / Explainability Panel -->
+  <div class="card rule-panel">
+    <div class="card-header">
+      <span class="card-title">Explainability</span>
+      <span style="font-size:0.72rem;color:var(--text-muted)">Rule-based reasoning</span>
+    </div>
+    <div class="card-body" id="ruleAlerts">
+      <div style="color:var(--text-muted);font-size:0.82rem">Load image and refresh sensors to see recommendations.</div>
+    </div>
+  </div>
+
+  <!-- Irrigation Panel -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Irrigation Decision</span>
+      <span class="badge badge-sim">SENSOR: SIMULATED</span>
+    </div>
+    <div class="card-body" id="irrigationBody">
+      <div class="irrigation-action hold" id="irrigationAction">—</div>
+      <div class="moisture-bar" id="moistureBars"></div>
+    </div>
+  </div>
+
+  <!-- Disease Fusion Panel -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Disease Risk Fusion</span>
+      <span style="font-size:0.72rem;color:var(--text-muted)">Visual + Environmental + Image Quality</span>
+    </div>
+    <div class="card-body" id="fusionBody">
+      <div style="color:var(--text-muted);font-size:0.82rem">Run classifier to see fused risk assessment.</div>
+    </div>
+  </div>
+
+  <!-- Session Log -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Session Log</span>
+      <span style="font-size:0.72rem;color:var(--text-muted)">Live activity</span>
+    </div>
+    <div class="card-body">
+      <div class="log-area" id="logArea"></div>
+    </div>
+  </div>
+
+</div><!-- /dashboard -->
+
+<div class="footer">
+  KisanNetra — PS 26180 · Qualcomm-sponsored · SIH 2026 &nbsp;|&nbsp;
+  Raspberry Pi 5 prototype &nbsp;|&nbsp;
+  Qualcomm Dragonwing QCS6490: future deployment target, NOT used here &nbsp;|&nbsp;
+  All sensor values are SIMULATED
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  CONSTANTS
+// ─────────────────────────────────────────────────────────────
+const CLASSES = ['Bacterial Blight','Blast','Brown Spot','Healthy','Tungro'];
+const CLASS_IDX = {0:'Bacterial Blight',1:'Blast',2:'Brown Spot',3:'Healthy',4:'Tungro'};
+
+const THRESHOLDS = {
+  soil_ph:          {min:5.5, max:7.0},
+  soil_ec:          {max:2.0},
+  soil_n:           {min:30, max:60},
+  soil_p:           {min:12},
+  soil_k:           {min:25},
+  surface_moisture: {min:22},
+  root_moisture:    {min:16},
+  tank_level:       {critical:20},
+};
+
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+let currentSensor = null;
+let lastPrediction = null;   // {cls, conf}
+let logBuffer = [];
+let isOffline = true;
+
+// ─────────────────────────────────────────────────────────────
+//  LOG
+// ─────────────────────────────────────────────────────────────
+function log(msg, type='info') {
+  const now = new Date().toLocaleTimeString('en-IN');
+  logBuffer.unshift({msg, type, time:now});
+  if (logBuffer.length > 100) logBuffer.pop();
+  renderLog();
+}
+function renderLog() {
+  const area = document.getElementById('logArea');
+  area.innerHTML = logBuffer.map(e => {
+    const cls = e.type==='ok' ? 'log-ok' : e.type==='warn' ? 'log-warn' : e.type==='err' ? 'log-err' : '';
+    return `<div class="log-line"><span class="log-time">[${e.time}]</span> <span class="${cls}">${e.msg}</span></div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  OFFLINE TOGGLE
+// ─────────────────────────────────────────────────────────────
+document.getElementById('modeToggle').addEventListener('change', e => {
+  isOffline = !e.target.checked;
+  const label = document.getElementById('modeLabel');
+  label.textContent = isOffline ? 'OFFLINE' : 'ONLINE';
+  label.className   = isOffline ? 'mode-text mode-offline' : 'mode-text mode-online';
+  log(isOffline
+    ? 'Mode: OFFLINE — inference + decisions local on edge device'
+    : 'Mode: ONLINE — cloud sync enabled (inference still local)', 'ok');
+});
+
+// ─────────────────────────────────────────────────────────────
+//  SENSOR MOCK
+// ─────────────────────────────────────────────────────────────
+function rand(lo, hi, decimals=1) {
+  return parseFloat((Math.random()*(hi-lo)+lo).toFixed(decimals));
+}
+function generateSensor() {
+  return {
+    timestamp: new Date().toISOString(),
+    surface_moisture: rand(18,48),
+    root_moisture:    rand(12,38),
+    soil_ph:          rand(5.2,7.6,1),
+    soil_ec:          rand(0.4,2.4,2),
+    soil_n:           Math.round(rand(20,65,0)),
+    soil_p:           Math.round(rand(8,32,0)),
+    soil_k:           Math.round(rand(18,55,0)),
+    soil_temperature: rand(22,36),
+    air_temperature:  rand(26,42),
+    humidity:         rand(40,92),
+    rain:             Math.random()<0.15,
+    light_lux:        Math.round(rand(200,1600,0)),
+    tank_level:       rand(5,98),
+    flow_lpm:         rand(0,16,1),
+    sensor_status: {
+      surface_moisture:'VALID', root_moisture:'VALID',
+      soil_ph:'VALID', tank_level:'VALID'
+    }
+  };
+}
+
+const SENSOR_META = [
+  {key:'surface_moisture', label:'Surface Moisture', unit:'%',     icon:'💧'},
+  {key:'root_moisture',    label:'Root Moisture',    unit:'%',     icon:'🌱'},
+  {key:'soil_ph',          label:'Soil pH',           unit:'',      icon:'⚗️'},
+  {key:'soil_ec',          label:'Soil EC',           unit:'dS/m',  icon:'⚡'},
+  {key:'soil_n',           label:'Nitrogen (N)',       unit:'mg/kg', icon:'🌿'},
+  {key:'soil_p',           label:'Phosphorus (P)',     unit:'mg/kg', icon:'🟡'},
+  {key:'soil_k',           label:'Potassium (K)',      unit:'mg/kg', icon:'🔴'},
+  {key:'soil_temperature', label:'Soil Temp',         unit:'°C',    icon:'🌡️'},
+  {key:'air_temperature',  label:'Air Temp',          unit:'°C',    icon:'🌤️'},
+  {key:'humidity',         label:'Humidity',          unit:'%',     icon:'🌫️'},
+  {key:'light_lux',        label:'Light',             unit:'lux',   icon:'☀️'},
+  {key:'tank_level',       label:'Tank Level',        unit:'%',     icon:'🛢️'},
+];
+
+function sensorColor(sensor, key) {
+  const v = sensor[key];
+  const t = THRESHOLDS[key];
+  if (!t) return 'var(--text)';
+  if ((t.min !== undefined && v < t.min) || (t.max !== undefined && v > t.max) ||
+      (t.critical !== undefined && v < t.critical)) return 'var(--danger)';
+  return 'var(--text)';
+}
+
+function renderSensors(sensor) {
+  const grid = document.getElementById('sensorGrid');
+  grid.innerHTML = SENSOR_META.map(m => {
+    const val = sensor[m.key];
+    const statusKey = m.key.includes('moisture') ? m.key : (m.key==='soil_ph'||m.key==='soil_ec'? 'soil_ph': (m.key==='tank_level'?'tank_level':null));
+    const status = statusKey ? (sensor.sensor_status[statusKey]||'UNKNOWN') : 'VALID';
+    const dotCls = status==='VALID'?'dot-valid':status==='STALE'?'dot-stale':'dot-failed';
+    const color  = sensorColor(sensor, m.key);
+    return `<div class="sensor-item">
+      <div class="sensor-name">${m.icon} ${m.label}</div>
+      <div class="sensor-val" style="color:${color}">${typeof val==='boolean'?(val?'Yes':'No'):val}</div>
+      <div class="sensor-unit"><span class="sensor-status-dot ${dotCls}"></span>${m.unit||'—'} · ${status}</div>
+    </div>`;
+  }).join('');
+
+  if (sensor.rain) {
+    grid.innerHTML += `<div class="sensor-item" style="grid-column:span 2">
+      <div class="sensor-name">🌧️ Rain Detected</div>
+      <div class="sensor-val" style="color:var(--info)">Active</div>
+      <div class="sensor-unit">Rain module · VALID</div>
+    </div>`;
+  }
+}
+
+function refreshSensors() {
+  currentSensor = generateSensor();
+  renderSensors(currentSensor);
+  runRuleEngine();
+  log('Sensor reading refreshed (SIMULATED)', 'ok');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RULE ENGINE (JavaScript port of step6_rule_engine.py)
+// ─────────────────────────────────────────────────────────────
+function evalNutrients(s) {
+  const alerts = [];
+  const ph = s.soil_ph, ec = s.soil_ec, n = s.soil_n, p = s.soil_p, k = s.soil_k;
+  if (ph < 5.5)  alerts.push({level:'warn', title:'pH Low',      msg:`Soil pH ${ph} below 5.5–7.0 — apply lime.`});
+  if (ph > 7.0)  alerts.push({level:'warn', title:'pH High',     msg:`Soil pH ${ph} above 7.0 — apply sulfur or organic matter.`});
+  if (ec > 2.0)  alerts.push({level:'danger',title:'High Salinity', msg:`EC ${ec} dS/m > 2.0 — salinity stress. Consider leaching.`});
+  if (n < 30)    alerts.push({level:'warn', title:'N Deficiency',msg:`Soil N ${n} mg/kg is low — apply urea or split-dose fertiliser.`});
+  if (n > 60)    alerts.push({level:'warn', title:'N Excess',    msg:`Soil N ${n} mg/kg excess — risk of lodging and blast.`});
+  if (p < 12)    alerts.push({level:'warn', title:'P Deficiency',msg:`Soil P ${p} mg/kg is low — apply DAP or SSP.`});
+  if (k < 25)    alerts.push({level:'warn', title:'K Deficiency',msg:`Soil K ${k} mg/kg is low — apply MOP.`});
+  if (n > 60 || ph > 7.2)
+    alerts.push({level:'info', title:'Zinc Risk (Agronomic Prior)',
+      msg:'Possible zinc deficiency — high N or alkaline pH can lock out Zn. Soil test recommended. If confirmed, apply ZnSO₄ 25 kg/ha basal.'});
+  return alerts;
+}
+
+function evalIrrigation(s) {
+  if (s.rain) return {action:'HOLD', reasons:['Active rainfall — irrigation not needed.']};
+  if (s.tank_level < 20)
+    return {action:'BLOCKED', reasons:[`Tank level ${s.tank_level.toFixed(0)}% critically low (<20%) — irrigation BLOCKED.`]};
+  const reasons = [];
+  let irrigate = false;
+  if (s.surface_moisture < 22) { irrigate=true; reasons.push(`Surface moisture ${s.surface_moisture}% < 22% threshold.`); }
+  if (s.root_moisture    < 16) { irrigate=true; reasons.push(`Root-zone moisture ${s.root_moisture}% < 16% threshold.`); }
+  if (!irrigate) reasons.push('Soil moisture within acceptable range — no irrigation needed.');
+  if (irrigate && s.flow_lpm < 0.5)
+    reasons.push('WARNING: Valve commanded but flow_lpm=0 — possible blockage. Verify manually.');
+  return {action: irrigate?'IRRIGATE':'NO_ACTION', reasons};
+}
+
+function evalFusion(cls, conf, s) {
+  if (!cls) return null;
+  let imgQuality = s.light_lux < 400 ? 'POOR' : 'GOOD';
+  let adjConf    = imgQuality==='POOR' ? conf*0.7 : conf;
+  const factors  = [];
+  if (imgQuality==='POOR') factors.push(`Low light (${s.light_lux} lux) — image quality degraded, visual confidence reduced to ${(adjConf*100).toFixed(0)}%.`);
+  if (cls==='Healthy') return {risk:'NONE', factors:['Model predicts healthy crop.'], imgQuality};
+  const envMap = {
+    'Bacterial Blight': {humThresh:80,  tempRange:[25,35]},
+    'Blast':            {humThresh:85,  tempRange:[24,32]},
+  };
+  let envOk = false;
+  const env = envMap[cls];
+  if (env && s.humidity >= env.humThresh && s.air_temperature >= env.tempRange[0] && s.air_temperature <= env.tempRange[1]) {
+    envOk = true;
+    factors.push(`Environmental corroboration: humidity ${s.humidity}% ≥ ${env.humThresh}% and temp ${s.air_temperature}°C in ${env.tempRange} risk window.`);
+  }
+  let risk = 'LOW';
+  if (adjConf >= 0.75 && envOk)     risk = 'HIGH';
+  else if (adjConf >= 0.55 || envOk) risk = 'MEDIUM';
+  else factors.push('Below threshold — monitoring recommended.');
+  return {risk, factors, adjConf, imgQuality};
+}
+
+function runRuleEngine() {
+  if (!currentSensor) return;
+  const s = currentSensor;
+
+  // Nutrients
+  const nutAlerts = evalNutrients(s);
+  // Irrigation
+  const irr = evalIrrigation(s);
+  // Fusion
+  const fusion = lastPrediction ? evalFusion(lastPrediction.cls, lastPrediction.conf, s) : null;
+
+  // ── Render rule alerts
+  const alertsEl = document.getElementById('ruleAlerts');
+  const all = [];
+  if (fusion && fusion.risk !== 'NONE') {
+    const rc = fusion.risk==='HIGH'?'danger':fusion.risk==='MEDIUM'?'yellow':'gray';
+    all.push({level:rc, title:`Disease Risk: ${fusion.risk}`, msg: fusion.factors.join(' ')});
+  }
+  all.push(...nutAlerts);
+  irr.reasons.forEach(r => all.push({level:irr.action==='IRRIGATE'?'blue':irr.action==='BLOCKED'?'danger':'green', title:'Irrigation', msg:r}));
+
+  if (all.length===0) all.push({level:'green', title:'All Clear', msg:'No alerts — conditions normal.'});
+
+  alertsEl.innerHTML = all.map(a => `
+    <div class="alert-item alert-${a.level==='warn'?'yellow':a.level==='danger'?'red':a.level==='blue'?'blue':a.level==='info'?'blue':a.level==='green'?'green':'gray'}">
+      <div class="alert-title">${a.title}</div>
+      <div class="alert-msg">${a.msg}</div>
+    </div>`).join('');
+
+  // ── Render irrigation
+  const irrEl = document.getElementById('irrigationAction');
+  const irrEmoji = irr.action==='IRRIGATE'?'💧 IRRIGATE':irr.action==='BLOCKED'?'🚫 BLOCKED':'⏸ HOLD / NO ACTION';
+  irrEl.textContent = irrEmoji;
+  irrEl.className   = `irrigation-action ${irr.action==='IRRIGATE'?'irrigate':irr.action==='BLOCKED'?'blocked':'hold'}`;
+
+  document.getElementById('moistureBars').innerHTML = [
+    {key:'surface_moisture', label:'Surface', color:'#3b82f6', max:60},
+    {key:'root_moisture',    label:'Root-zone', color:'#8b5cf6', max:60},
+    {key:'tank_level',       label:'Tank',    color:'#06b6d4', max:100},
+  ].map(b => {
+    const pct = Math.min(100, (s[b.key]/b.max)*100);
+    const c   = s[b.key] < (b.key==='tank_level'?20:b.key==='surface_moisture'?22:16) ? 'var(--danger)' : b.color;
+    return `<div class="mb-row">
+      <span class="mb-label">${b.label}</span>
+      <div class="mb-track"><div class="mb-fill" style="width:${pct}%;background:${c}"></div></div>
+      <span class="mb-val">${s[b.key].toFixed(1)}</span>
+    </div>`;
+  }).join('');
+
+  // ── Render fusion
+  if (fusion) {
+    const riskColors = {HIGH:'var(--danger)',MEDIUM:'var(--warn)',LOW:'var(--text-muted)',NONE:'var(--accent)'};
+    const riskEmoji  = {HIGH:'⚠️',MEDIUM:'⚡',LOW:'🔍',NONE:'✅'};
+    document.getElementById('fusionBody').innerHTML = `
+      <div class="fusion-risk risk-${fusion.risk}">
+        <span class="risk-icon">${riskEmoji[fusion.risk]}</span>
+        <div>
+          <div class="risk-label" style="color:${riskColors[fusion.risk]}">${fusion.risk} RISK — ${lastPrediction.cls}</div>
+          <div class="risk-sub">Image quality: ${fusion.imgQuality} · Adj. confidence: ${fusion.adjConf !== undefined ? (fusion.adjConf*100).toFixed(0)+'%' : '—'}</div>
+        </div>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-muted)">
+        ${(fusion.factors||[]).map(f=>`<p style="margin-bottom:4px">• ${f}</p>`).join('')}
+      </div>`;
+  } else {
+    document.getElementById('fusionBody').innerHTML = '<div style="color:var(--text-muted);font-size:0.82rem">Run classifier to see fused risk.</div>';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CAMERA / INFERENCE (runs in browser using canvas softmax)
+// ─────────────────────────────────────────────────────────────
+let loadedImage = null;
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dz = document.getElementById('dropZone');
+    dz.innerHTML = `<img src="${ev.target.result}" alt="Loaded leaf"/>`;
+    loadedImage = ev.target.result;
+    document.getElementById('runBtn').disabled = false;
+    document.getElementById('runBtn').textContent = 'Run Disease Classifier';
+    log(`Image loaded: ${file.name}`, 'ok');
+  };
+  reader.readAsDataURL(file);
+});
+
+// Drag-and-drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor='var(--accent)'; });
+dz.addEventListener('dragleave', () => { dz.style.borderColor=''; });
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.style.borderColor='';
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    document.getElementById('fileInput').files = e.dataTransfer.files;
+    document.getElementById('fileInput').dispatchEvent(new Event('change'));
+  }
+});
+
+function softmax(arr) {
+  const max = Math.max(...arr);
+  const exps = arr.map(x => Math.exp(x - max));
+  const sum  = exps.reduce((a,b)=>a+b,0);
+  return exps.map(x=>x/sum);
+}
+
+function updateModelBadges(isReal) {
+  const b1 = document.getElementById('badge-model');
+  const b2 = document.getElementById('badge-model-card');
+  if (isReal) {
+    b1.className = 'badge badge-real'; b1.textContent = 'CAMERA MODEL: REAL';
+    if(b2) { b2.className = 'badge badge-real'; b2.textContent = 'CAMERA MODEL: REAL'; }
+  } else {
+    b1.className = 'badge badge-sim'; b1.textContent = 'CAMERA: OFFLINE — SIMULATED';
+    if(b2) { b2.className = 'badge badge-sim'; b2.textContent = 'OFFLINE — SIMULATED'; }
+  }
+}
+
+async function runInference() {
+  if (!loadedImage) return;
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Running…';
+  log('Running classifier on loaded image…');
+
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+
+  let cls = 'Healthy';
+  let conf = 0.99;
+  let isReal = false;
+
+  if (file) {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const res = await fetch('http://localhost:8787/predict', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+      cls = data.class;
+      conf = data.confidence;
+      isReal = true;
+      log(`Inference API success: ${data.model}`, 'ok');
+    } catch (err) {
+      log(`Inference API unreachable (${err.message}). Falling back to simulation.`, 'warn');
+      // Simulate realistic softmax scores from a 5-class model
+      const raw = CLASSES.map(() => (Math.random() - 0.3) * 4);
+      // Bias toward top-2 to simulate a realistic peaked distribution
+      const topIdx = Math.floor(Math.random() * CLASSES.length);
+      raw[topIdx] += 3.5;
+      const probs  = softmax(raw);
+      const maxIdx = probs.indexOf(Math.max(...probs));
+      conf   = probs[maxIdx];
+      cls    = CLASSES[maxIdx];
+      isReal = false;
+    }
+  }
+
+  updateModelBadges(isReal);
+  lastPrediction = {cls, conf};
+
+  // Update chip
+  const chip = document.getElementById('diseaseChip');
+  chip.textContent = cls;
+  chip.className = `disease-chip ${cls==='Healthy'?'chip-healthy':cls==='Blast'?'chip-blast':'chip-disease'}`;
+
+  // Update confidence bar
+  const fill = document.getElementById('confFill');
+  fill.style.width = (conf*100).toFixed(1)+'%';
+  fill.className = `confidence-fill ${conf>=0.75?'':conf>=0.5?'warn':'danger'}`;
+  document.getElementById('confLabel').textContent = `Confidence`;
+  document.getElementById('confPct').textContent   = (conf*100).toFixed(1)+'%';
+
+  log(`Inference complete — ${cls} (${(conf*100).toFixed(1)}%)`, 'ok');
+  if (!currentSensor) currentSensor = generateSensor();
+  runRuleEngine();
+
+  btn.disabled = false;
+  btn.textContent = 'Re-run Classifier';
+}
+
+// ─────────────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  refreshSensors();
+  log('KisanNetra dashboard initialised', 'ok');
+  log('CAMERA MODEL: REAL — MobileNetV3-Small val 87.32%', 'ok');
+  log('SENSOR DATA: SIMULATED — real hardware feed replaces mock with no code changes', 'warn');
+  log('QUALCOMM EXECUTION: NOT RUN — software-only validation', 'warn');
+});
+</script>
+</body>
+</html>

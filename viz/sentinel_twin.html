@@ -1,0 +1,1072 @@
+<title>Smart Farm Sentinel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ground:#f1f4f0; --surface:#fff; --surface-2:#f7f9f6; --surface-3:#eef2ec;
+    --line:#dce2da; --line-2:#c2cbbf; --ink:#161b18; --ink-2:#495349; --ink-3:#78827a;
+    --data:#2170a8; --data-2:#d3e4f1; --data-3:#8fb6d2;
+    --good:#2e7d4f; --good-bg:#e2f0e7;
+    --warn:#a36703; --warn-bg:#f7ecd6;
+    --crit:#b3402f; --crit-bg:#f7e3df;
+    --soil:#8a6f47; --leaf:#4f8a3f;
+    --sh:0 1px 2px rgba(20,32,24,.06),0 8px 24px -14px rgba(20,32,24,.2);
+    --r:8px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0f1211; --surface:#181c1a; --surface-2:#1f2422; --surface-3:#252b28;
+      --line:#2d3431; --line-2:#404945; --ink:#e6ebe7; --ink-2:#a4aea8; --ink-3:#76817b;
+      --data:#58a8de; --data-2:#1e3547; --data-3:#3d6a8c;
+      --good:#6cbf58; --good-bg:#1b2c1f;
+      --warn:#e0a93c; --warn-bg:#302617;
+      --crit:#e8705c; --crit-bg:#331d19;
+      --soil:#a98a5c; --leaf:#6fae56;
+      --sh:0 1px 2px rgba(0,0,0,.4),0 8px 24px -14px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0f1211; --surface:#181c1a; --surface-2:#1f2422; --surface-3:#252b28;
+    --line:#2d3431; --line-2:#404945; --ink:#e6ebe7; --ink-2:#a4aea8; --ink-3:#76817b;
+    --data:#58a8de; --data-2:#1e3547; --data-3:#3d6a8c;
+    --good:#6cbf58; --good-bg:#1b2c1f;
+    --warn:#e0a93c; --warn-bg:#302617;
+    --crit:#e8705c; --crit-bg:#331d19;
+    --soil:#a98a5c; --leaf:#6fae56;
+    --sh:0 1px 2px rgba(0,0,0,.4),0 8px 24px -14px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;font-size:14px;line-height:1.5;
+    -webkit-font-smoothing:antialiased}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+  h1,h2,h3{font-family:Archivo,ui-sans-serif,system-ui,sans-serif;margin:0;letter-spacing:-.015em}
+
+  .wrap{max-width:1340px;margin:0 auto;padding:16px 18px 56px}
+
+  /* topbar */
+  .top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    padding:12px 16px;box-shadow:var(--sh);margin-bottom:12px}
+  .brand h1{font-size:17px;font-weight:700;line-height:1.2}
+  .brand p{margin:1px 0 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+  .topright{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+  .stat{display:flex;flex-direction:column;gap:1px;padding:0 12px;border-left:1px solid var(--line)}
+  .stat .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+    font-family:"IBM Plex Mono",monospace}
+  .stat .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15px;
+    font-variant-numeric:tabular-nums}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:4px;
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:500;
+    letter-spacing:.06em;text-transform:uppercase;border:1px solid transparent;white-space:nowrap}
+  .pill.ok{background:var(--good-bg);color:var(--good);border-color:var(--good)}
+  .pill.warn{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+  .pill.crit{background:var(--crit-bg);color:var(--crit);border-color:var(--crit)}
+  .pill.mute{background:var(--surface-3);color:var(--ink-3);border-color:var(--line-2)}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+
+  button{font-family:inherit;font-size:inherit;cursor:pointer}
+  .btn{padding:7px 12px;border-radius:6px;border:1px solid var(--line-2);
+    background:var(--surface-2);color:var(--ink-2);font-size:12.5px}
+  .btn:hover{border-color:var(--data);color:var(--ink)}
+  .btn:focus-visible{outline:2px solid var(--data);outline-offset:2px}
+  .btn.on{background:var(--data);border-color:var(--data);color:#fff;font-weight:600}
+  .btn.danger{border-color:var(--crit);color:var(--crit)}
+  .btn.primary{background:var(--data);border-color:var(--data);color:#fff;font-weight:600}
+
+  /* scenario bar */
+  .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;
+    box-shadow:var(--sh)}
+  .bar .lbl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3);margin-right:4px}
+  .chip{padding:5px 10px;border-radius:5px;border:1px solid var(--line-2);
+    background:var(--surface-2);color:var(--ink-2);
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.02em}
+  .chip:hover{border-color:var(--data);color:var(--ink)}
+  .chip:focus-visible{outline:2px solid var(--data);outline-offset:2px}
+  .chip[aria-pressed="true"]{background:var(--data);border-color:var(--data);color:#fff;font-weight:600}
+
+  /* tabs */
+  .tabs{display:flex;gap:2px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .tab{padding:9px 15px;border:0;background:none;color:var(--ink-3);font-size:13px;
+    border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab:hover{color:var(--ink)}
+  .tab:focus-visible{outline:2px solid var(--data);outline-offset:-2px}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--data);font-weight:600}
+
+  /* cards */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--sh);overflow:hidden}
+  .hd{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 14px;border-bottom:1px solid var(--line)}
+  .hd h2{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-3);font-weight:500}
+  .bd{padding:14px}
+
+  .grid{display:grid;gap:12px}
+  .g-main{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+  .g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media(max-width:1020px){.g-main,.g-3,.g-2{grid-template-columns:1fr}}
+
+  /* farm map */
+  .map{width:100%;height:auto;display:block;border-radius:6px;background:var(--surface-2)}
+  .zone-rect{cursor:pointer;transition:opacity .2s}
+  .zone-rect:hover{opacity:.85}
+
+  /* zone cards */
+  .zcard{border:1px solid var(--line);border-radius:6px;padding:11px;background:var(--surface-2);
+    cursor:pointer;text-align:left;width:100%;display:block}
+  .zcard:hover{border-color:var(--data)}
+  .zcard:focus-visible{outline:2px solid var(--data);outline-offset:2px}
+  .zcard.sel{border-color:var(--data);background:var(--data-2)}
+  .zcard .zt{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .zcard .zn{font-family:Archivo,sans-serif;font-weight:600;font-size:14px}
+  .zcard .zs{font-size:12px;color:var(--ink-2)}
+
+  /* sensors */
+  .sens{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+  .s{border:1px solid var(--line);border-radius:5px;padding:8px 9px;background:var(--surface-2)}
+  .s .sk{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ink-3);display:flex;justify-content:space-between;gap:4px}
+  .s .sv{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:16px;
+    font-variant-numeric:tabular-nums;margin-top:2px}
+  .s .su{font-size:11px;color:var(--ink-3);font-weight:400}
+  .s.w{border-color:var(--warn)} .s.c{border-color:var(--crit)}
+  .s.f{border-color:var(--crit);background:var(--crit-bg)}
+  .s.f .sv{color:var(--crit);font-size:12px;letter-spacing:.05em}
+  .q{width:6px;height:6px;border-radius:50%;display:inline-block}
+  .q.g{background:var(--good)} .q.d{background:var(--warn)} .q.x{background:var(--crit)}
+
+  /* risk rows */
+  .rr{display:grid;grid-template-columns:120px minmax(0,1fr) 62px;gap:10px;align-items:center;
+    padding:7px 0;border-bottom:1px dashed var(--line)}
+  .rr:last-child{border-bottom:0}
+  .rr .rn{font-size:13px;color:var(--ink-2)}
+  .rtrack{height:18px;background:var(--surface-3);border:1px solid var(--line);
+    border-radius:4px;overflow:hidden;position:relative}
+  .rfill{position:absolute;inset:0 auto 0 0;border-radius:3px;transition:width .4s ease}
+  .rfill.lo{background:var(--good)} .rfill.md{background:var(--warn)} .rfill.hi{background:var(--crit)}
+  .rr .rv{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+    text-align:right;letter-spacing:.04em}
+
+  /* decision */
+  .dec{padding:14px;border-radius:6px;border-left:3px solid var(--data);background:var(--data-2)}
+  .dec.act{border-left-color:var(--crit);background:var(--crit-bg)}
+  .dec.hold{border-left-color:var(--warn);background:var(--warn-bg)}
+  .dec .dl{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-3);margin-bottom:5px}
+  .dec .dv{font-family:Archivo,sans-serif;font-weight:700;font-size:20px;line-height:1.2;
+    text-wrap:balance}
+  .dec .dz{font-size:13px;color:var(--ink-2);margin-top:5px}
+
+  .why{margin-top:0}
+  .why li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:9px;padding:7px 0;
+    border-bottom:1px dashed var(--line);list-style:none}
+  .why li:last-child{border-bottom:0}
+  .why{margin:0;padding:0}
+  .why .m{font-family:"IBM Plex Mono",monospace;font-weight:700;text-align:center;font-size:13px}
+  .why .m.up{color:var(--crit)} .why .m.dn{color:var(--good)} .why .m.n{color:var(--ink-3)}
+  .why .t{font-size:13px}
+  .why .t b{font-weight:600}
+  .why .t span{color:var(--ink-3);font-size:12px;display:block;
+    font-family:"IBM Plex Mono",monospace}
+
+  /* charts */
+  .spark{display:block;width:100%;height:52px}
+  .chartrow{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .chartrow:last-child{border-bottom:0}
+  .chartrow .ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .chartrow .cn{font-size:12px;color:var(--ink-2)}
+  .chartrow .cv{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;
+    font-variant-numeric:tabular-nums}
+
+  /* pipeline */
+  .pipe{display:flex;flex-direction:column;gap:0;align-items:center}
+  .pnode{width:100%;max-width:520px;border:1px solid var(--line-2);border-radius:6px;
+    padding:11px 14px;background:var(--surface-2);text-align:center}
+  .pnode.edge{border-color:var(--data);background:var(--data-2)}
+  .pnode.cloud{border-style:dashed}
+  .pnode .pt{font-family:Archivo,sans-serif;font-weight:600;font-size:14px}
+  .pnode .pd{font-size:12px;color:var(--ink-2);margin-top:2px}
+  .parrow{width:2px;height:16px;background:var(--line-2)}
+  .psplit{display:flex;gap:10px;width:100%;max-width:520px}
+  .psplit .pnode{max-width:none}
+
+  .banner{padding:11px 14px;border-radius:6px;margin-bottom:12px;font-size:13.5px;
+    border-left:3px solid var(--data);background:var(--data-2)}
+  .banner b{font-weight:600}
+
+  .caution{padding:9px 12px;border-radius:5px;background:var(--warn-bg);
+    border-left:3px solid var(--warn);font-size:12.5px;color:var(--ink)}
+  .caution b{font-weight:600}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3);font-weight:500}
+  td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+  .scroll{overflow-x:auto}
+
+  .hide{display:none}
+  footer{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);
+    color:var(--ink-3);font-size:12px;max-width:80ch}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">
+      <h1>Smart Farm Sentinel</h1>
+      <p>Fixed pole-mounted edge-AI node · digital twin</p>
+    </div>
+    <div class="topright">
+      <div class="stat"><span class="k">Farm health</span><span class="v" id="fh">—</span></div>
+      <div class="stat"><span class="k">Field time</span><span class="v" id="clk">—</span></div>
+      <span class="pill ok" id="p-edge"><span class="dot"></span>Edge AI active</span>
+      <span class="pill" id="p-net"><span class="dot"></span>—</span>
+      <button class="btn" id="netbtn">Cut internet</button>
+    </div>
+  </div>
+
+  <div class="bar">
+    <span class="lbl">Scenario</span>
+    <span id="scen"></span>
+    <span style="flex:1"></span>
+    <button class="btn primary" id="demo">▶ Run guided demo</button>
+  </div>
+
+  <div id="demobanner"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true"  data-v="dash">Dashboard</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="fuse">Fusion pipeline</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="arch">Architecture</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="hw">Hardware</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="bench">Benchmarks</button>
+  </div>
+
+  <!-- ================= DASHBOARD ================= -->
+  <div id="v-dash">
+    <div class="grid g-main" style="margin-bottom:12px">
+
+      <div class="card">
+        <div class="hd"><h2>Monitored plot — one fixed sentinel, three zones</h2>
+          <span class="pill mute" id="fovlbl">FOV: zone A</span></div>
+        <div class="bd">
+          <svg class="map" id="map" viewBox="0 0 620 320" role="img"
+               aria-label="Farm plot with three monitored zones and a fixed sentinel node"></svg>
+          <div class="grid g-3" style="margin-top:12px" id="zcards"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd"><h2>Decision — computed on the edge</h2>
+          <span class="pill mute mono" id="declat">—</span></div>
+        <div class="bd" style="display:flex;flex-direction:column;gap:12px">
+          <div id="decision"></div>
+          <div>
+            <div class="hd" style="padding:0 0 8px;border:0"><h2>Why this decision</h2></div>
+            <ul class="why" id="why"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g-main" style="margin-bottom:12px">
+      <div class="card">
+        <div class="hd"><h2>Sensor stack — <span id="senszone">zone A</span></h2>
+          <span class="pill mute" id="sensq">—</span></div>
+        <div class="bd"><div class="sens" id="sens"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="hd"><h2>Risk engine</h2><span class="pill mute">edge</span></div>
+        <div class="bd"><div id="risks"></div></div>
+      </div>
+    </div>
+
+    <div class="grid g-3">
+      <div class="card">
+        <div class="hd"><h2>Camera — fixed field of view</h2>
+          <span class="pill warn">simulated inference</span></div>
+        <div class="bd" id="cam"></div>
+      </div>
+
+      <div class="card">
+        <div class="hd"><h2>Precision irrigation</h2><span class="pill mute" id="tankpill">—</span></div>
+        <div class="bd" id="irr"></div>
+      </div>
+
+      <div class="card">
+        <div class="hd"><h2>Continuous monitoring</h2><span class="pill mute">last 24 h</span></div>
+        <div class="bd" id="trends"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FUSION ================= -->
+  <div id="v-fuse" class="hide">
+    <div class="banner">
+      Camera, soil, environment and time history are <b>not four dashboards</b>. Each stage below
+      consumes the one above it, and the numbers are live from the running simulation.
+    </div>
+    <div class="grid g-2">
+      <div class="card"><div class="hd"><h2>Fusion pipeline — <span id="fz">zone A</span></h2></div>
+        <div class="bd"><div class="pipe" id="pipe"></div></div></div>
+      <div class="card"><div class="hd"><h2>Stage detail</h2></div>
+        <div class="bd" id="pipedetail"></div></div>
+    </div>
+  </div>
+
+  <!-- ================= ARCHITECTURE ================= -->
+  <div id="v-arch" class="hide">
+    <div class="banner">
+      Everything needed to <b>detect a risk and act on it</b> runs on the sentinel. The cloud
+      layer is optional and additive — cutting it degrades analytics, never decisions.
+    </div>
+    <div class="grid g-2">
+      <div class="card"><div class="hd"><h2>Edge — critical path</h2><span class="pill ok" id="a-edge"><span class="dot"></span>active</span></div>
+        <div class="bd" id="archedge"></div></div>
+      <div class="card"><div class="hd"><h2>Cloud — optional</h2><span class="pill" id="a-cloud"><span class="dot"></span>—</span></div>
+        <div class="bd" id="archcloud"></div></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="hd"><h2>Where Qualcomm fits</h2></div>
+      <div class="bd">
+        <p style="margin:0 0 10px">The vision model is the NPU workload that justifies the silicon.
+        Software is written against an <code class="mono">EdgeInferenceEngine</code> interface so the
+        implementation can be swapped without touching the fusion, risk or decision engines:</p>
+        <div class="scroll"><table>
+          <tr><th>Implementation</th><th>Status</th><th>What it proves</th></tr>
+          <tr><td class="mono">SimulatedEdgeInferenceEngine</td>
+              <td><span class="pill warn">in use here</span></td>
+              <td>Pipeline behaviour, fusion logic, decision flow</td></tr>
+          <tr><td class="mono">QualcommEdgeInferenceEngine</td>
+              <td><span class="pill mute">not yet built</span></td>
+              <td>Real latency, memory and NPU utilisation on QCS6490</td></tr>
+        </table></div>
+        <div class="caution" style="margin-top:12px"><b>This page is a browser simulation.</b>
+        It is not running on Qualcomm hardware and no number here is a hardware measurement.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HARDWARE ================= -->
+  <div id="v-hw" class="hide">
+    <div class="grid g-main">
+      <div class="card"><div class="hd"><h2>Sentinel node — physical concept</h2></div>
+        <div class="bd"><svg id="hwsvg" viewBox="0 0 420 460" style="width:100%;height:auto"
+          role="img" aria-label="Pole-mounted sentinel: camera, enclosure, soil probes"></svg></div></div>
+      <div class="card"><div class="hd"><h2>Component mapping</h2></div>
+        <div class="bd" id="hwmap"></div></div>
+    </div>
+  </div>
+
+  <!-- ================= BENCHMARKS ================= -->
+  <div id="v-bench" class="hide">
+    <div class="caution" style="margin-bottom:12px">
+      <b>Every value on this screen is a simulation placeholder.</b> None has been measured on
+      Qualcomm hardware. The column exists so real figures have somewhere to land once
+      the AI Hub profiling job has been run.
+    </div>
+    <div class="card"><div class="hd"><h2>Edge performance</h2>
+      <span class="pill warn">simulation / demo value</span></div>
+      <div class="bd scroll" id="bench"></div></div>
+  </div>
+
+  <footer>
+    Explanatory digital twin of the proposed fixed sentinel node. Sensor values, vision
+    confidences, risk scores and water savings are <b>generated by a simulation engine for
+    explanation</b> — they are not measurements from a deployed device, and agronomic
+    thresholds are general starting points, not calibrated field constants. Recommendations
+    are advisory; the decision engine never actuates without a farmer-visible reason.
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(i){return document.getElementById(i)};
+var clamp=function(v,a,b){return Math.max(a,Math.min(b,v))};
+var r1=function(v){return Math.round(v*10)/10};
+
+/* ---------------- zoneModel ---------------- */
+function Zone(id,name,crop){
+  return {id:id,name:name,crop:crop,
+    soilMoisture:34,soilTemp:26,airTemp:30,humidity:58,rain:false,light:640,
+    ph:6.6,n:"NORMAL",p:"NORMAL",k:"NORMAL",ec:1.1,
+    cropHealth:88,diseaseConf:.08,pestCount:0,
+    irrigationState:"IDLE",litres:0,
+    hist:{m:[],t:[],h:[],dr:[],pr:[],ws:[]}};
+}
+var ZONES=[Zone("A","Zone A","Cotton · flowering"),
+           Zone("B","Zone B","Cotton · flowering"),
+           Zone("C","Zone C","Cotton · boll set")];
+var sel="A";
+var zoneOf=function(id){return ZONES.filter(function(z){return z.id===id})[0]};
+
+/* ---------------- faultSimulator ---------------- */
+var faults={soilMoisture:"GOOD",humidity:"GOOD",airTemp:"GOOD"};
+
+/* ---------------- connectivitySimulator ---------------- */
+var online=true;
+var queued=0;
+
+/* ---------------- waterTankSimulator ---------------- */
+var tank={level:72,capacity:500};
+
+/* ---------------- scenarioEngine ---------------- */
+var SCEN=[
+ {id:"normal",  label:"normal"},
+ {id:"drought", label:"drought"},
+ {id:"heat",    label:"heat wave"},
+ {id:"rain",    label:"heavy rain"},
+ {id:"disease", label:"disease outbreak"},
+ {id:"pest",    label:"pest outbreak"},
+ {id:"nutrient",label:"nutrient deficiency"},
+ {id:"tank",    label:"low water tank"},
+ {id:"sensor",  label:"sensor failure"}
+];
+var scenario="normal";
+
+function applyScenario(id){
+  scenario=id;
+  faults={soilMoisture:"GOOD",humidity:"GOOD",airTemp:"GOOD"};
+  ZONES.forEach(function(z){z.rain=false;});
+  if(id==="normal"){ZONES.forEach(function(z){z.diseaseConf=.08;z.pestCount=0;z.n="NORMAL";});}
+  if(id==="tank") tank.level=9;
+  if(id==="sensor") faults.soilMoisture="FAILED";
+  if(id==="nutrient"){zoneOf("C").n="LOW";}
+  if(id==="rain") ZONES.forEach(function(z){z.rain=true;});
+  paintScen();
+}
+
+/* ---------------- sensorSimulator ---------------- */
+var tick=0, simMin=6*60;
+
+function stepSensors(){
+  tick++; simMin=(simMin+10)%1440;
+  var hour=simMin/60;
+  var solar=Math.max(0,Math.sin((hour-6)/12*Math.PI));
+
+  ZONES.forEach(function(z,i){
+    var s=scenario;
+    // baseline diurnal behaviour
+    var targetT=27+9*solar+(i*0.6);
+    var dryRate=0.06+0.05*solar;
+
+    if(s==="drought"){targetT+=6;dryRate+=0.22;}
+    if(s==="heat"){targetT+=11;dryRate+=0.14;}
+    if(s==="rain"){targetT-=5;}
+
+    z.airTemp += (targetT-z.airTemp)*0.15 + (Math.random()-.5)*0.2;
+    z.soilTemp += (z.airTemp-4-z.soilTemp)*0.08;
+    z.light = Math.round(solar*950+Math.random()*30);
+
+    // zone B is the water-stress zone; C is the disease/pest zone
+    var zoneDry = (z.id==="B")?1.7:(z.id==="C"?1.0:0.7);
+
+    if(z.rain){ z.soilMoisture=clamp(z.soilMoisture+0.9,0,62); }
+    else if(z.irrigationState==="IRRIGATING"){ z.soilMoisture=clamp(z.soilMoisture+0.85,0,62); }
+    else { z.soilMoisture=clamp(z.soilMoisture-dryRate*zoneDry,3,62); }
+
+    var targetH = z.rain?92:clamp(86-solar*36+(z.soilMoisture-30)*0.4,25,97);
+    if(s==="disease") targetH=Math.max(targetH,83);
+    z.humidity += (targetH-z.humidity)*0.16 + (Math.random()-.5)*0.4;
+    z.humidity=clamp(z.humidity,10,99);
+
+    // vision-side state
+    if(s==="disease" && z.id==="C") z.diseaseConf=clamp(z.diseaseConf+0.012,0,.93);
+    else if(s!=="disease") z.diseaseConf=clamp(z.diseaseConf-0.004,.03,1);
+
+    if(s==="pest" && z.id==="C") { if(tick%3===0) z.pestCount=Math.min(z.pestCount+Math.ceil(z.pestCount*0.4)+1,26); }
+    else if(s!=="pest") z.pestCount=Math.max(0,z.pestCount-(tick%6===0?1:0));
+
+    if(s==="nutrient"&&z.id==="C") z.n="LOW";
+
+    z.cropHealth = clamp(100 - risks(z).ws*0.28 - risks(z).dis*0.34
+                             - risks(z).pest*0.2 - risks(z).heat*0.18, 12, 99);
+
+    // history
+    var R=risks(z);
+    push(z.hist.m,z.soilMoisture); push(z.hist.t,z.airTemp); push(z.hist.h,z.humidity);
+    push(z.hist.dr,R.dis); push(z.hist.pr,R.pest); push(z.hist.ws,R.ws);
+  });
+
+  if(scenario==="tank") tank.level=Math.max(4,tank.level-0.05);
+  if(!online) queued++;
+}
+function push(a,v){a.push(v); if(a.length>144)a.shift();}
+
+/* value accessors that respect sensor faults - never fake a failed reading */
+function read(z,key){
+  if(faults[key]==="FAILED") return null;
+  return z[key];
+}
+
+/* ---------------- visionInferenceInterface ----------------
+   Pluggable. SimulatedEdgeInferenceEngine today; a real trained model,
+   compiled for a Qualcomm target, drops in behind the same signature. */
+var SimulatedEdgeInferenceEngine={
+  name:"SimulatedEdgeInferenceEngine",
+  infer:function(z){
+    return {crop_detected:true,
+            crop_health_score:Math.round(z.cropHealth),
+            disease_class: z.diseaseConf>.5?"bacterial blight (suspected)":
+                           z.diseaseConf>.25?"early lesion (uncertain)":"none",
+            disease_confidence:z.diseaseConf,
+            pest_detected:z.pestCount>0,
+            pest_count:z.pestCount,
+            pest_confidence: z.pestCount?clamp(.4+z.pestCount*0.02,0,.92):0,
+            image_confidence: clamp(.9-(z.light<120?.45:0),0,1),
+            simulated:true};
+  }
+};
+var EdgeInferenceEngine=SimulatedEdgeInferenceEngine;
+
+/* ---------------- risk engines ---------------- */
+function trend(a){ if(a.length<6)return 0;
+  var n=Math.min(12,a.length), s=a.slice(-n);
+  return (s[n-1]-s[0])/(n/6); } // per ~hour
+
+function risks(z){
+  var m=read(z,"soilMoisture"), T=read(z,"airTemp"), H=read(z,"humidity");
+  var mt=trend(z.hist.m), dt=trend(z.hist.dr);
+  var conf=1;
+
+  // water stress
+  var ws=0;
+  if(m===null){ ws=0; conf=0.35; }
+  else{
+    if(m<18) ws+=55; else if(m<24) ws+=34; else if(m<29) ws+=15;
+    if(mt<-0.5) ws+=18;
+    if(T!==null&&T>36) ws+=18; else if(T!==null&&T>32) ws+=8;
+    if(H!==null&&H<45) ws+=8;
+    if(z.rain) ws-=25;
+  }
+  ws=clamp(ws,0,100);
+
+  // disease
+  var v=EdgeInferenceEngine.infer(z);
+  var dis=v.disease_confidence*55;
+  if(H!==null&&H>80) dis+=22; else if(H!==null&&H>70) dis+=10;
+  if(T!==null&&T>26&&T<34) dis+=12;
+  if(dt>0.3) dis+=12;
+  dis=clamp(dis,0,100);
+
+  // pest
+  var pest=clamp(z.pestCount*6.5,0,100);
+
+  // nutrient
+  var nut=0;
+  if(z.n==="LOW") nut+=48; if(z.p==="LOW") nut+=22; if(z.k==="LOW") nut+=22;
+  if(z.ph<5.6||z.ph>7.8) nut+=18;
+  nut=clamp(nut,0,100);
+
+  // environment
+  var heat=T===null?0:clamp((T-33)*11,0,100);
+  var flood=(m===null)?0:clamp((z.rain?45:0)+(m>46?(m-46)*6:0),0,100);
+
+  return {ws:ws,dis:dis,pest:pest,nut:nut,heat:heat,flood:flood,conf:conf,vision:v,
+          mtrend:mt,dtrend:dt};
+}
+var band=function(v){return v>=60?"HIGH":v>=32?"MEDIUM":"LOW"};
+var cls =function(v){return v>=60?"hi":v>=32?"md":"lo"};
+
+/* ---------------- decisionEngine ---------------- */
+function decide(){
+  var cands=ZONES.map(function(z){return {z:z,R:risks(z)}});
+
+  // flood / rain gate first - never irrigate into saturated soil
+  var wet=cands.filter(function(c){return c.R.flood>=45});
+  var thirsty=cands.filter(function(c){return c.R.ws>=55 && c.R.flood<45})
+                   .sort(function(a,b){return b.R.ws-a.R.ws});
+  var sick=cands.filter(function(c){return c.R.dis>=60||c.R.pest>=60})
+                .sort(function(a,b){return (b.R.dis+b.R.pest)-(a.R.dis+a.R.pest)});
+
+  if(faults.soilMoisture==="FAILED" && thirsty.length===0){
+    return {kind:"hold",title:"Manual inspection required",
+      zone:"soil-moisture sensor unavailable across the plot",
+      why:[["n","Soil moisture","channel reporting FAILED — value not substituted"],
+           ["n","Water-stress confidence","LOW — the primary signal is missing"],
+           ["n","Decision","withheld rather than guessed from temperature alone"]]};
+  }
+  if(wet.length && thirsty.length){
+    return {kind:"hold",title:"Delay irrigation",zone:wet[0].z.name+" — soil already saturated",
+      why:whyFlood(wet[0])};
+  }
+  if(thirsty.length){
+    var t=thirsty[0];
+    if(tank.level<15){
+      return {kind:"hold",title:"Irrigation blocked — tank refill required",
+        zone:t.z.name+" needs water but the tank is at "+Math.round(tank.level)+"%",
+        why:[["up","Water stress",t.z.name+" at "+band(t.R.ws)+" ("+Math.round(t.R.ws)+"/100)"],
+             ["n","Tank level",Math.round(tank.level)+"% — below the 15% safety floor"],
+             ["n","Decision","valve held closed; running dry would damage the pump"]]};
+    }
+    return {kind:"act",title:"Irrigate "+t.z.name,zone:t.z.crop,why:whyWater(t)};
+  }
+  if(sick.length){
+    var s=sick[0];
+    var pestLed = s.R.pest>s.R.dis;
+    return {kind:"act",title:"Inspect "+s.z.name,
+      zone:pestLed?"pest activity rising":"disease risk elevated",
+      why:pestLed?whyPest(s):whyDisease(s)};
+  }
+  return {kind:"ok",title:"No action required",zone:"all three zones within normal range",
+    why:[["dn","Water stress","every zone below the irrigation threshold"],
+         ["dn","Disease risk","no visual evidence above the reporting threshold"],
+         ["dn","Environment","temperature and humidity inside normal bands"]]};
+}
+function whyWater(c){
+  var m=read(c.z,"soilMoisture");
+  return [["up","Soil moisture",m===null?"unavailable":Math.round(m)+"% — below the irrigation threshold"],
+          ["up","Moisture trend",r1(c.R.mtrend)+" %/h and falling"],
+          ["up","Air temperature",Math.round(c.z.airTemp)+" °C driving evapotranspiration"],
+          ["n","Rain",c.z.rain?"detected":"not detected in the recent window"],
+          ["n","Tank",Math.round(tank.level)+"% — sufficient to run the cycle"]];
+}
+function whyFlood(c){
+  return [["up","Rain",c.z.rain?"currently detected":"recent rainfall"],
+          ["up","Soil moisture",Math.round(c.z.soilMoisture)+"% — at or above saturation"],
+          ["n","Waterlogging risk",band(c.R.flood)+" ("+Math.round(c.R.flood)+"/100)"],
+          ["dn","Decision","irrigation suppressed; adding water would worsen root anoxia"]];
+}
+function whyDisease(c){
+  var v=c.R.vision;
+  return [["up","Visual evidence",Math.round(v.disease_confidence*100)+"% confidence · "+v.disease_class],
+          ["up","Humidity",Math.round(c.z.humidity)+"% — favourable for bacterial spread"],
+          ["up","Temperature",Math.round(c.z.airTemp)+" °C inside the pathogen's active band"],
+          ["up","Historical trend",c.R.dtrend>0.3?"disease probability increasing":"stable"],
+          ["n","Advisory","inspection recommended — no chemical is prescribed automatically"]];
+}
+function whyPest(c){
+  var h=c.z.hist.pr;
+  return [["up","Pest detections",c.z.pestCount+" in the current frame"],
+          ["up","Trend",h.length>6?"rising across the last hours":"newly detected"],
+          ["up","Pest risk",band(c.R.pest)+" ("+Math.round(c.R.pest)+"/100)"],
+          ["n","Advisory","targeted inspection of this zone only — not a blanket spray"]];
+}
+
+/* ---------------- irrigationSimulator ---------------- */
+var irrLog=[];
+function stepIrrigation(d){
+  ZONES.forEach(function(z){
+    var want = d.kind==="act" && d.title==="Irrigate "+z.name;
+    if(want && z.irrigationState==="IDLE" && tank.level>=15){
+      z.irrigationState="IRRIGATING"; z.litres=0;
+    }
+    if(z.irrigationState==="IRRIGATING"){
+      z.litres+=1.15; tank.level=Math.max(0,tank.level-0.23);
+      if(z.soilMoisture>=32||z.litres>=10||tank.level<5){
+        z.irrigationState="IDLE";
+        irrLog.unshift({z:z.name,l:r1(z.litres),t:fmtClock()});
+        if(irrLog.length>5) irrLog.pop();
+        z.litres=0;
+      }
+    }
+  });
+}
+
+/* ---------------- analytics ---------------- */
+function farmHealth(){
+  var s=ZONES.reduce(function(a,z){return a+z.cropHealth},0)/ZONES.length;
+  return Math.round(s);
+}
+
+/* ---------------- rendering ---------------- */
+function fmtClock(){var h=Math.floor(simMin/60),m=simMin%60;
+  return (h<10?"0":"")+h+":"+(m<10?"0":"")+m;}
+
+function paintScen(){
+  $("scen").innerHTML=SCEN.map(function(s){
+    return '<button class="chip" data-s="'+s.id+'" aria-pressed="'+(s.id===scenario)+'">'+s.label+'</button>';
+  }).join(" ");
+  Array.prototype.forEach.call($("scen").children,function(b){
+    b.addEventListener("click",function(){applyScenario(b.dataset.s);render();});
+  });
+}
+
+function paintMap(){
+  var zx=[26,222,418], w=176;
+  var svg='<rect x="8" y="8" width="604" height="304" rx="8" fill="var(--surface-3)" stroke="var(--line)"/>';
+  ZONES.forEach(function(z,i){
+    var R=risks(z), worst=Math.max(R.ws,R.dis,R.pest,R.flood,R.heat);
+    var stroke = worst>=60?"var(--crit)":worst>=32?"var(--warn)":"var(--good)";
+    var fill   = worst>=60?"var(--crit-bg)":worst>=32?"var(--warn-bg)":"var(--good-bg)";
+    svg+='<g class="zone-rect" data-z="'+z.id+'" role="button" tabindex="0">'
+      +'<rect x="'+zx[i]+'" y="30" width="'+w+'" height="150" rx="6" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+(sel===z.id?3:1.5)+'"/>';
+    for(var r=0;r<3;r++)for(var c=0;c<4;c++){
+      var cx=zx[i]+26+c*42, cy=66+r*44;
+      svg+='<circle cx="'+cx+'" cy="'+cy+'" r="9" fill="var(--leaf)" opacity="'+(0.35+z.cropHealth/160)+'"/>'
+         +'<rect x="'+(cx-1)+'" y="'+cy+'" width="2" height="12" fill="var(--soil)"/>';
+    }
+    svg+='<text x="'+(zx[i]+10)+'" y="'+22+'" font-size="12" font-family="IBM Plex Mono,monospace" fill="var(--ink-2)">'+z.name.toUpperCase()+'</text>'
+      +'<text x="'+(zx[i]+w-10)+'" y="22" text-anchor="end" font-size="11" font-family="IBM Plex Mono,monospace" fill="'+stroke+'">'+band(worst)+'</text>';
+    if(z.irrigationState==="IRRIGATING")
+      svg+='<text x="'+(zx[i]+w/2)+'" y="172" text-anchor="middle" font-size="11" font-family="IBM Plex Mono,monospace" fill="var(--data)">▼ irrigating</text>';
+    svg+='</g>';
+  });
+  // sentinel + FOV
+  var si=["A","B","C"].indexOf(sel), tx=zx[si]+w/2;
+  svg+='<path d="M310 232 L'+tx+' 182 L'+(tx+40)+' 182 Z" fill="var(--data)" opacity=".13"/>';
+  svg+='<line x1="310" y1="300" x2="310" y2="232" stroke="var(--line-2)" stroke-width="4"/>'
+     +'<rect x="286" y="234" width="48" height="30" rx="4" fill="var(--data)" />'
+     +'<rect x="296" y="266" width="28" height="20" rx="3" fill="var(--ink-2)" />'
+     +'<text x="310" y="253" text-anchor="middle" font-size="9" font-family="IBM Plex Mono,monospace" fill="#fff">EDGE</text>'
+     +'<text x="310" y="300" text-anchor="middle" font-size="10.5" font-family="IBM Plex Mono,monospace" fill="var(--ink-3)">SENTINEL · FIXED</text>';
+  $("map").innerHTML=svg;
+  Array.prototype.forEach.call($("map").querySelectorAll(".zone-rect"),function(g){
+    var pick=function(){sel=g.dataset.z;render();};
+    g.addEventListener("click",pick);
+    g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}});
+  });
+  $("fovlbl").textContent="FOV: "+zoneOf(sel).name;
+}
+
+function paintZoneCards(){
+  $("zcards").innerHTML=ZONES.map(function(z){
+    var R=risks(z), worst=Math.max(R.ws,R.dis,R.pest,R.flood);
+    var lead = R.ws>=R.dis&&R.ws>=R.pest?"water stress":R.dis>=R.pest?"disease risk":"pest risk";
+    var p = worst>=60?"crit":worst>=32?"warn":"ok";
+    return '<button class="zcard'+(sel===z.id?' sel':'')+'" data-z="'+z.id+'">'
+      +'<div class="zt"><span class="zn">'+z.name+'</span>'
+      +'<span class="pill '+p+'">'+(worst<32?"healthy":band(worst)+" "+lead)+'</span></div>'
+      +'<div class="zs mono">health '+Math.round(z.cropHealth)+' · moisture '
+      +(read(z,"soilMoisture")===null?"n/a":Math.round(z.soilMoisture)+"%")+'</div></button>';
+  }).join("");
+  Array.prototype.forEach.call($("zcards").children,function(b){
+    b.addEventListener("click",function(){sel=b.dataset.z;render();});
+  });
+}
+
+function sensorCell(k,label,val,unit,st,warnAt,critAt){
+  if(st==="FAILED") return '<div class="s f"><div class="sk">'+label+'<span class="q x"></span></div>'
+    +'<div class="sv">UNAVAILABLE</div></div>';
+  var c = (critAt!==undefined&&val>=critAt)?"c":(warnAt!==undefined&&val>=warnAt)?"w":"";
+  return '<div class="s '+c+'"><div class="sk">'+label+'<span class="q '+(st==="DEGRADED"?"d":"g")+'"></span></div>'
+    +'<div class="sv">'+val+'<span class="su"> '+unit+'</span></div></div>';
+}
+
+function paintSensors(){
+  var z=zoneOf(sel);
+  $("senszone").textContent=z.name.toLowerCase();
+  var failed=Object.keys(faults).filter(function(k){return faults[k]==="FAILED"});
+  $("sensq").textContent=failed.length?failed.length+" channel failed":"all channels good";
+  $("sensq").className="pill "+(failed.length?"crit":"ok");
+
+  var m=read(z,"soilMoisture");
+  var h='';
+  h+= m===null?sensorCell("m","Soil moisture",0,"","FAILED")
+     :sensorCell("m","Soil moisture",Math.round(m),"%","GOOD");
+  h+=sensorCell("t","Air temp",r1(z.airTemp),"°C","GOOD",36,40);
+  h+=sensorCell("st","Soil temp",r1(z.soilTemp),"°C","GOOD");
+  h+=sensorCell("h","Humidity",Math.round(z.humidity),"%","GOOD",80);
+  h+='<div class="s"><div class="sk">Rain<span class="q g"></span></div><div class="sv">'+(z.rain?"YES":"NO")+'</div></div>';
+  h+=sensorCell("l","Light",z.light,"lux","GOOD");
+  h+=sensorCell("ph","Soil pH",r1(z.ph),"","GOOD");
+  h+='<div class="s'+(z.n==="LOW"?" w":"")+'"><div class="sk">Nitrogen<span class="q g"></span></div><div class="sv" style="font-size:13px">'+z.n+'</div></div>';
+  h+='<div class="s"><div class="sk">Phosphorus<span class="q g"></span></div><div class="sv" style="font-size:13px">'+z.p+'</div></div>';
+  h+='<div class="s"><div class="sk">Potassium<span class="q g"></span></div><div class="sv" style="font-size:13px">'+z.k+'</div></div>';
+  h+=sensorCell("ec","EC",r1(z.ec),"dS/m","GOOD");
+  h+='<div class="s"><div class="sk">Tank<span class="q g"></span></div><div class="sv">'+Math.round(tank.level)+'<span class="su"> %</span></div></div>';
+  $("sens").innerHTML=h;
+}
+
+function paintRisks(){
+  var z=zoneOf(sel), R=risks(z);
+  var rows=[["Water stress",R.ws],["Disease",R.dis],["Pest",R.pest],
+            ["Nutrient",R.nut],["Heat",R.heat],["Waterlogging",R.flood]];
+  $("risks").innerHTML=rows.map(function(r){
+    return '<div class="rr"><span class="rn">'+r[0]+'</span>'
+      +'<div class="rtrack"><div class="rfill '+cls(r[1])+'" style="width:'+Math.round(r[1])+'%"></div></div>'
+      +'<span class="rv" style="color:var(--'+(r[1]>=60?"crit":r[1]>=32?"warn":"good")+')">'+band(r[1])+'</span></div>';
+  }).join("")
+  + (R.conf<1?'<div class="caution" style="margin-top:10px"><b>Confidence reduced.</b> '
+      +'A required sensor is unavailable, so these scores rest on fewer signals.</div>':'');
+}
+
+function paintDecision(){
+  var d=decide();
+  var k=d.kind==="act"?"act":d.kind==="hold"?"hold":"";
+  $("decision").innerHTML='<div class="dec '+k+'"><div class="dl">Recommendation</div>'
+    +'<div class="dv">'+d.title+'</div><div class="dz">'+d.zone+'</div></div>';
+  $("why").innerHTML=d.why.map(function(w){
+    return '<li><span class="m '+w[0]+'">'+(w[0]==="up"?"▲":w[0]==="dn"?"▼":"•")+'</span>'
+      +'<span class="t"><b>'+w[1]+'</b><span>'+w[2]+'</span></span></li>';
+  }).join("");
+  $("declat").textContent="local · "+(8+Math.round(Math.random()*5))+" ms (simulated)";
+  return d;
+}
+
+function paintCam(){
+  var z=zoneOf(sel), v=EdgeInferenceEngine.infer(z);
+  $("cam").innerHTML=
+   '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'
+   +'<div style="width:74px;height:56px;border-radius:5px;background:var(--surface-3);border:1px solid var(--line);position:relative;overflow:hidden;flex:none">'
+   +'<div style="position:absolute;inset:auto 0 0 0;height:'+(28+z.cropHealth*0.22)+'%;background:var(--leaf);opacity:.55"></div>'
+   +'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-family:IBM Plex Mono,monospace;color:var(--ink-2)">'+z.name+'</div></div>'
+   +'<div><div class="mono" style="font-size:11px;color:var(--ink-3)">CROP HEALTH</div>'
+   +'<div class="mono" style="font-size:22px;font-weight:600">'+v.crop_health_score+'<span style="font-size:12px;color:var(--ink-3)"> /100</span></div></div></div>'
+   +row("Disease class",v.disease_class)
+   +row("Disease confidence",Math.round(v.disease_confidence*100)+"%")
+   +row("Pest detected",v.pest_detected?v.pest_count+" instances":"none")
+   +row("Pest confidence",v.pest_confidence?Math.round(v.pest_confidence*100)+"%":"—")
+   +row("Image confidence",Math.round(v.image_confidence*100)+"%")
+   +'<div class="caution" style="margin-top:10px"><b>Mock inference.</b> Produced by '
+   +'<span class="mono">SimulatedEdgeInferenceEngine</span>, not a trained model. '
+   +'These are not measured AI accuracy figures.</div>';
+}
+function row(k,v){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line)">'
+  +'<span style="font-size:12.5px;color:var(--ink-2)">'+k+'</span>'
+  +'<span class="mono" style="font-size:12.5px;font-weight:500">'+v+'</span></div>';}
+
+function paintIrr(){
+  $("tankpill").textContent="tank "+Math.round(tank.level)+"%";
+  $("tankpill").className="pill "+(tank.level<15?"crit":tank.level<35?"warn":"ok");
+  var active=ZONES.filter(function(z){return z.irrigationState==="IRRIGATING"});
+  var h='';
+  ZONES.forEach(function(z){
+    var m=read(z,"soilMoisture");
+    var act = z.irrigationState==="IRRIGATING"?"IRRIGATING":
+              (m!==null&&m<24&&tank.level>=15?"QUEUED":"WAIT");
+    h+='<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line)">'
+      +'<span style="font-size:13px">'+z.name+'</span>'
+      +'<span class="mono" style="font-size:12px;color:var(--ink-3)">'+(m===null?"n/a":Math.round(m)+"%")+'</span>'
+      +'<span class="pill '+(act==="IRRIGATING"?"ok":act==="QUEUED"?"warn":"mute")+'">'+act+'</span></div>';
+  });
+  if(active.length) h+='<div style="margin-top:9px" class="mono" style="font-size:12px">Flow: '
+    +r1(active[0].litres)+' L delivered of 10 L target</div>';
+  h+='<div class="caution" style="margin-top:10px"><b>Simulated demonstration value.</b> '
+    +'Flood irrigating all three zones would use ~30 L; zone-targeted delivery uses ~10 L here. '
+    +'Not a measured field saving.</div>';
+  if(irrLog.length){
+    h+='<div class="mono" style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:12px 0 4px">Recent cycles</div>';
+    irrLog.forEach(function(e){h+='<div class="mono" style="font-size:12px;color:var(--ink-2)">'+e.t+' · '+e.z+' · '+e.l+' L</div>';});
+  }
+  $("irr").innerHTML=h;
+}
+
+function sparkline(data,unit,fmt){
+  if(data.length<2) return '<svg class="spark"></svg>';
+  var n=data.length, mn=Math.min.apply(null,data), mx=Math.max.apply(null,data);
+  if(mx-mn<1){mx=mn+1;}
+  var pts=data.map(function(v,i){
+    return (i/(n-1)*300).toFixed(1)+","+(46-(v-mn)/(mx-mn)*40).toFixed(1);}).join(" ");
+  var last=data[n-1];
+  return '<svg class="spark" viewBox="0 0 300 52" preserveAspectRatio="none" aria-hidden="true">'
+    +'<polyline points="'+pts+'" fill="none" stroke="var(--data)" stroke-width="2" '
+    +'vector-effect="non-scaling-stroke" stroke-linejoin="round"/>'
+    +'<circle cx="300" cy="'+(46-(last-mn)/(mx-mn)*40).toFixed(1)+'" r="3" fill="var(--data)"/></svg>';
+}
+
+function paintTrends(){
+  var z=zoneOf(sel);
+  var series=[["Soil moisture",z.hist.m,"%"],["Air temperature",z.hist.t,"°C"],
+              ["Humidity",z.hist.h,"%"],["Disease risk",z.hist.dr,"/100"],
+              ["Pest activity",z.hist.pr,"/100"],["Water stress",z.hist.ws,"/100"]];
+  $("trends").innerHTML=series.map(function(s){
+    var v=s[1].length?s[1][s[1].length-1]:0;
+    var t=trend(s[1]);
+    var arrow=t>0.25?"▲":t<-0.25?"▼":"→";
+    return '<div class="chartrow"><div class="ch"><span class="cn">'+s[0]+'</span>'
+      +'<span class="cv">'+arrow+' '+r1(v)+s[2]+'</span></div>'
+      +sparkline(s[1],s[2])+'</div>';
+  }).join("");
+}
+
+function paintPipeline(){
+  var z=zoneOf(sel), R=risks(z), v=R.vision, m=read(z,"soilMoisture");
+  $("fz").textContent=z.name.toLowerCase();
+  var arrow='<div class="parrow"></div>';
+  $("pipe").innerHTML=
+   '<div class="psplit"><div class="pnode"><div class="pt">Camera</div><div class="pd">disease '
+   +Math.round(v.disease_confidence*100)+'% · pest '+v.pest_count+'</div></div>'
+   +'<div class="pnode"><div class="pt">Soil</div><div class="pd">'
+   +(m===null?'<span style="color:var(--crit)">unavailable</span>':Math.round(m)+'% · '+r1(R.mtrend)+' %/h')+'</div></div></div>'
+   +arrow
+   +'<div class="psplit"><div class="pnode"><div class="pt">Environment</div><div class="pd">'
+   +Math.round(z.airTemp)+' °C · '+Math.round(z.humidity)+'% RH · rain '+(z.rain?"yes":"no")+'</div></div>'
+   +'<div class="pnode"><div class="pt">Time history</div><div class="pd">'+z.hist.m.length+' samples retained</div></div></div>'
+   +arrow
+   +'<div class="pnode edge"><div class="pt">Sensor fusion</div><div class="pd">combines all four; '
+   +(R.conf<1?'confidence reduced — a channel is missing':'all channels contributing')+'</div></div>'
+   +arrow
+   +'<div class="pnode edge"><div class="pt">Risk engine</div><div class="pd">water '+band(R.ws)
+   +' · disease '+band(R.dis)+' · pest '+band(R.pest)+'</div></div>'
+   +arrow
+   +'<div class="pnode edge"><div class="pt">Decision engine</div><div class="pd">'+decide().title+'</div></div>'
+   +arrow
+   +'<div class="psplit"><div class="pnode"><div class="pt">Local alert</div><div class="pd">always available</div></div>'
+   +'<div class="pnode"><div class="pt">Irrigation</div><div class="pd">'+(ZONES.some(function(x){return x.irrigationState==="IRRIGATING"})?"valve open":"valves closed")+'</div></div></div>'
+   +arrow
+   +'<div class="pnode cloud"><div class="pt">Cloud sync — optional</div><div class="pd">'
+   +(online?'connected':'offline · '+queued+' records queued locally')+'</div></div>';
+
+  $("pipedetail").innerHTML=
+    '<p style="margin:0 0 10px;font-size:13px;color:var(--ink-2)">Each stage below only exists because the '
+    +'stage above it could not answer the question alone.</p>'
+    +row("Camera alone","sees symptoms, cannot see soil")
+    +row("Soil alone","sees water, cannot see a lesion")
+    +row("Environment alone","sees weather, not the plant")
+    +row("History alone","sees change, not cause")
+    +row("Fusion","resolves which explanation the evidence supports")
+    +'<div class="caution" style="margin-top:12px"><b>Everything above the cloud node runs on the sentinel.</b> '
+    +'Cutting the network removes only the bottom box.</div>';
+}
+
+function paintArch(){
+  var edge=[["Sensor ingestion","every 10 simulated minutes"],
+            ["Preprocessing","range checks, fault flagging"],
+            ["Camera inference","NPU workload on the Qualcomm target"],
+            ["Disease + pest detection","per zone"],
+            ["Sensor fusion","multimodal, per zone"],
+            ["Risk scoring","water, disease, pest, nutrient, environment"],
+            ["Recommendation engine","explainable advisory"],
+            ["Local alerts","display / SMS path"],
+            ["Irrigation decisions","zone-level valve control"]];
+  var cloud=[["Historical archive","long-term storage"],
+             ["Fleet analytics","cross-farm aggregation"],
+             ["Remote monitoring","agronomist dashboard"],
+             ["Model + config updates","OTA delivery"],
+             ["Synchronisation","queued replay on reconnect"]];
+  $("archedge").innerHTML=edge.map(function(e){
+    return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)">'
+      +'<span style="font-size:13px"><b style="font-weight:600">'+e[0]+'</b><br><span style="color:var(--ink-3);font-size:12px">'+e[1]+'</span></span>'
+      +'<span class="pill ok">running</span></div>';}).join("");
+  $("archcloud").innerHTML=cloud.map(function(e){
+    return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)">'
+      +'<span style="font-size:13px"><b style="font-weight:600">'+e[0]+'</b><br><span style="color:var(--ink-3);font-size:12px">'+e[1]+'</span></span>'
+      +'<span class="pill '+(online?"ok":"crit")+'">'+(online?"available":"unavailable")+'</span></div>';}).join("")
+    +(online?'':'<div class="caution" style="margin-top:10px"><b>'+queued+' records queued locally.</b> '
+      +'They replay automatically when the link returns. No decision waited on the cloud.</div>');
+  $("a-cloud").className="pill "+(online?"ok":"crit");
+  $("a-cloud").innerHTML='<span class="dot"></span>'+(online?"connected":"unavailable");
+}
+
+function paintHW(){
+  $("hwsvg").innerHTML=
+   '<line x1="210" y1="120" x2="210" y2="400" stroke="var(--line-2)" stroke-width="9"/>'
+   +'<rect x="150" y="52" width="120" height="16" rx="3" fill="var(--data)" transform="rotate(-14 210 60)"/>'
+   +'<text x="292" y="46" font-size="11" font-family="IBM Plex Mono,monospace" fill="var(--ink-3)">solar, tilted</text>'
+   +'<rect x="168" y="96" width="52" height="34" rx="5" fill="var(--ink-2)"/>'
+   +'<path d="M168 113 L120 150 L120 120 Z" fill="var(--data)" opacity=".2"/>'
+   +'<text x="292" y="116" font-size="11" font-family="IBM Plex Mono,monospace" fill="var(--ink-3)">camera + sun hood</text>'
+   +'<rect x="158" y="176" width="104" height="74" rx="7" fill="var(--data)"/>'
+   +'<text x="210" y="206" text-anchor="middle" font-size="10" font-family="IBM Plex Mono,monospace" fill="#fff">EDGE AI</text>'
+   +'<text x="210" y="222" text-anchor="middle" font-size="10" font-family="IBM Plex Mono,monospace" fill="#fff">QCS6490</text>'
+   +'<text x="210" y="238" text-anchor="middle" font-size="10" font-family="IBM Plex Mono,monospace" fill="#fff">+ MCU + LoRa</text>'
+   +'<text x="292" y="200" font-size="11" font-family="IBM Plex Mono,monospace" fill="var(--ink-3)">sealed enclosure</text>'
+   +'<rect x="20" y="400" width="380" height="52" fill="var(--soil)" opacity=".35"/>'
+   +'<line x1="210" y1="400" x2="120" y2="400" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="3 3"/>'
+   +'<rect x="114" y="400" width="7" height="30" fill="var(--good)"/>'
+   +'<rect x="86" y="400" width="7" height="46" fill="var(--good)"/>'
+   +'<text x="30" y="392" font-size="11" font-family="IBM Plex Mono,monospace" fill="var(--ink-3)">soil probes · 100 / 300 mm</text>'
+   +'<text x="210" y="446" text-anchor="middle" font-size="10.5" font-family="IBM Plex Mono,monospace" fill="var(--ink-3)">FARM GROUND · DEVICE DOES NOT MOVE</text>';
+
+  $("hwmap").innerHTML=
+   '<div class="scroll"><table>'
+   +'<tr><th>Function</th><th>Candidate part</th></tr>'
+   +'<tr><td>Edge compute + NPU</td><td class="mono">Qualcomm QCS6490 class</td></tr>'
+   +'<tr><td>Always-on sentinel MCU</td><td class="mono">ESP32 class</td></tr>'
+   +'<tr><td>Camera</td><td class="mono">fixed field camera, sun hood</td></tr>'
+   +'<tr><td>Soil moisture</td><td class="mono">capacitive, 2 depths</td></tr>'
+   +'<tr><td>Air temp / humidity</td><td class="mono">SHT31 class</td></tr>'
+   +'<tr><td>Rain / light</td><td class="mono">discrete sensors</td></tr>'
+   +'<tr><td>Link</td><td class="mono">LoRa or Wi-Fi</td></tr>'
+   +'<tr><td>Actuation</td><td class="mono">solenoid valve + driver</td></tr>'
+   +'<tr><td>Power</td><td class="mono">solar + LiFePO4</td></tr>'
+   +'</table></div>'
+   +'<div class="caution" style="margin-top:12px"><b>Designed for outdoor environmental protection.</b> '
+   +'No IP rating is claimed — none has been tested. Interfaces are kept abstract so no single '
+   +'component choice is load-bearing.</div>';
+}
+
+function paintBench(){
+  var rows=[["Vision inference latency","—","ms"],["Decision latency","—","ms"],
+            ["Sensor update rate","6","/hour"],["Camera processing rate","—","fps"],
+            ["Model size","—","MB"],["Peak memory","—","MB"],
+            ["NPU utilisation","—","%"],["Power per inference","—","mJ"]];
+  $("bench").innerHTML='<table><tr><th>Metric</th><th>Simulated</th><th>Hardware validated</th><th>Unit</th></tr>'
+    +rows.map(function(r){
+      var sim = r[0]==="Sensor update rate"?r[1]:(r[0]==="Decision latency"?"~10":"—");
+      return '<tr><td>'+r[0]+'</td><td class="n">'+sim+'</td>'
+        +'<td class="n" style="color:var(--ink-3)">awaiting SPIKE-0</td><td class="mono">'+r[2]+'</td></tr>';
+    }).join("")+'</table>';
+}
+
+/* ---------------- master render ---------------- */
+function render(){
+  $("clk").textContent=fmtClock();
+  $("fh").textContent=farmHealth()+" / 100";
+  $("p-net").className="pill "+(online?"ok":"crit");
+  $("p-net").innerHTML='<span class="dot"></span>'+(online?"Cloud connected":"Internet offline");
+  $("netbtn").textContent=online?"Cut internet":"Restore internet";
+  $("netbtn").className="btn "+(online?"danger":"");
+
+  paintMap(); paintZoneCards(); paintSensors(); paintRisks();
+  var d=paintDecision(); stepIrrigation(d);
+  paintCam(); paintIrr(); paintTrends();
+  paintPipeline(); paintArch(); paintHW(); paintBench();
+}
+
+/* ---------------- tabs ---------------- */
+var VIEWS=["dash","fuse","arch","hw","bench"];
+Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){
+  t.addEventListener("click",function(){
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(x){
+      x.setAttribute("aria-selected",x===t);});
+    VIEWS.forEach(function(v){$("v-"+v).classList.toggle("hide",v!==t.dataset.v);});
+  });
+});
+
+$("netbtn").addEventListener("click",function(){
+  online=!online; if(online) queued=0; render();
+});
+
+/* ---------------- demo mode ---------------- */
+var DEMO=[
+ ["normal","Three zones, all healthy. The sentinel is fixed — it never moves; the camera covers each zone in turn."],
+ ["drought","Soil moisture in Zone B starts falling. Temperature climbs. No rain."],
+ ["drought","Fusion combines the falling trend with heat and no rainfall — water stress rises in Zone B only."],
+ ["drought","Decision: irrigate Zone B alone. Zones A and C are left untouched. That is what makes it precision irrigation."],
+ ["disease","Zone C now: the camera reports lesion evidence and humidity is climbing."],
+ ["disease","Neither signal is conclusive alone. Together, disease risk goes HIGH — with the reasons shown."],
+ ["rain","Heavy rain arrives. Soil is already saturated, so irrigation is suppressed rather than scheduled."],
+ ["rain","Now the internet is cut. Watch what keeps running."],
+ ["rain","Cloud is unavailable. Sensing, vision, fusion, risk scoring, decisions and irrigation all continue on the edge."],
+ ["sensor","Finally, the soil probe fails. The system does not substitute a fake value — it lowers confidence and asks for manual inspection."]
+];
+var demoIx=-1, demoTimer=null;
+$("demo").addEventListener("click",function(){
+  if(demoTimer){stopDemo();return;}
+  demoIx=-1; $("demo").textContent="■ Stop demo"; nextDemo();
+  demoTimer=setInterval(nextDemo,7000);
+});
+function nextDemo(){
+  demoIx++;
+  if(demoIx>=DEMO.length){stopDemo();return;}
+  var step=DEMO[demoIx];
+  if(demoIx===7) online=false;
+  if(demoIx===4) sel="C"; if(demoIx===1) sel="B";
+  applyScenario(step[0]);
+  $("demobanner").innerHTML='<div class="banner"><b>Step '+(demoIx+1)+' of '+DEMO.length+'.</b> '+step[1]+'</div>';
+  render();
+}
+function stopDemo(){
+  clearInterval(demoTimer); demoTimer=null;
+  $("demo").textContent="▶ Run guided demo"; $("demobanner").innerHTML="";
+}
+
+/* ---------------- boot ---------------- */
+paintScen();
+for(var i=0;i<30;i++) stepSensors();   // warm the history buffers
+render();
+setInterval(function(){stepSensors();render();},1400);
+})();
+</script>

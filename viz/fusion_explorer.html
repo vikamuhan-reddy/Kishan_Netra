@@ -1,0 +1,726 @@
+<title>Corroborated Diagnosis</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground:      #f2f4f1;
+    --surface:     #ffffff;
+    --surface-2:   #f7f9f6;
+    --line:        #dde2db;
+    --line-strong: #c3cbc0;
+    --ink:         #171c19;
+    --ink-2:       #4a544d;
+    --ink-3:       #78837a;
+
+    --data:        #2170a8;
+    --data-soft:   #d3e4f1;
+    --data-ghost:  #8fb6d2;
+
+    --good:        #2e7d4f;
+    --good-bg:     #e2f0e7;
+    --warn:        #a36703;
+    --warn-bg:     #f7ecd6;
+    --crit:        #b3402f;
+    --crit-bg:     #f7e3df;
+
+    --shadow: 0 1px 2px rgba(20,32,24,.06), 0 8px 24px -12px rgba(20,32,24,.18);
+    --r: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #101312;
+      --surface:     #191d1b;
+      --surface-2:   #202523;
+      --line:        #2e3532;
+      --line-strong: #414a46;
+      --ink:         #e7ece8;
+      --ink-2:       #a6b0aa;
+      --ink-3:       #77827c;
+
+      --data:        #58a8de;
+      --data-soft:   #1e3547;
+      --data-ghost:  #3d6a8c;
+
+      --good:        #6cbf58;
+      --good-bg:     #1b2c1f;
+      --warn:        #e0a93c;
+      --warn-bg:     #302617;
+      --crit:        #e8705c;
+      --crit-bg:     #331d19;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #101312;
+    --surface:     #191d1b;
+    --surface-2:   #202523;
+    --line:        #2e3532;
+    --line-strong: #414a46;
+    --ink:         #e7ece8;
+    --ink-2:       #a6b0aa;
+    --ink-3:       #77827c;
+
+    --data:        #58a8de;
+    --data-soft:   #1e3547;
+    --data-ghost:  #3d6a8c;
+
+    --good:        #6cbf58;
+    --good-bg:     #1b2c1f;
+    --warn:        #e0a93c;
+    --warn-bg:     #302617;
+    --crit:        #e8705c;
+    --crit-bg:     #331d19;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 22px 64px; }
+
+  /* ---------- masthead ---------- */
+  .masthead { border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 26px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--ink-3); margin: 0 0 10px;
+  }
+  h1 {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700; font-size: clamp(28px, 4.2vw, 40px);
+    letter-spacing: -.022em; line-height: 1.08; margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .thesis { color: var(--ink-2); max-width: 66ch; margin: 0; font-size: 16px; }
+  .thesis b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- layout ---------- */
+  .panel { display: grid; grid-template-columns: minmax(0,340px) minmax(0,1fr); gap: 22px; align-items: start; }
+  @media (max-width: 880px) { .panel { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r); box-shadow: var(--shadow);
+  }
+  .card-hd {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    padding: 14px 16px; border-bottom: 1px solid var(--line);
+  }
+  .card-hd h2 {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 500; margin: 0;
+  }
+  .card-bd { padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+
+  /* ---------- controls ---------- */
+  .field-label {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+    font-size: 13px; color: var(--ink-2); margin-bottom: 7px;
+  }
+  .field-label .v {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); font-size: 13px;
+  }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 22px;
+    background: transparent; cursor: pointer; display: block; margin: 0;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 4px; border-radius: 2px; background: var(--line-strong);
+  }
+  input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line-strong); }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 15px; height: 15px; margin-top: -5.5px;
+    border-radius: 50%; background: var(--data); border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--data);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 15px; height: 15px; border-radius: 50%; background: var(--data);
+    border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--data);
+  }
+  input[type=range]:focus-visible { outline: 2px solid var(--data); outline-offset: 3px; border-radius: 4px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px; letter-spacing: .02em;
+    padding: 6px 10px; border-radius: 5px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2);
+  }
+  .chip:hover { border-color: var(--data); color: var(--ink); }
+  .chip:focus-visible { outline: 2px solid var(--data); outline-offset: 2px; }
+  .chip[aria-pressed="true"] {
+    background: var(--data); border-color: var(--data); color: #fff; font-weight: 600;
+  }
+
+  select {
+    width: 100%; padding: 9px 10px; border-radius: 6px;
+    border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink);
+    font-family: "IBM Plex Sans", sans-serif; font-size: 13.5px;
+  }
+  select:focus-visible { outline: 2px solid var(--data); outline-offset: 2px; }
+
+  .toggle { display: flex; align-items: flex-start; gap: 9px; cursor: pointer; }
+  .toggle input { margin: 3px 0 0; accent-color: var(--data); width: 15px; height: 15px; flex: none; }
+  .toggle span { font-size: 13px; color: var(--ink-2); }
+  .toggle b { color: var(--ink); font-weight: 600; display: block; font-size: 13.5px; }
+
+  .divider { height: 1px; background: var(--line); }
+
+  /* ---------- verdict ---------- */
+  .verdict { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .verdict-top {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+  .dx {
+    font-family: Archivo, sans-serif; font-weight: 700;
+    font-size: clamp(24px, 3.4vw, 34px); letter-spacing: -.02em; line-height: 1.1;
+    margin: 0 0 4px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  }
+  .dx .pct {
+    font-family: "IBM Plex Mono", monospace; font-size: 20px; font-weight: 600;
+    color: var(--data); font-variant-numeric: tabular-nums;
+  }
+  .action {
+    font-size: 15px; color: var(--ink-2); margin: 6px 0 0;
+  }
+  .action b { color: var(--ink); font-weight: 600; }
+
+  .flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .flag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 500;
+    letter-spacing: .04em; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 4px; border: 1px solid transparent;
+  }
+  .flag.ok    { background: var(--good-bg); color: var(--good); border-color: var(--good); }
+  .flag.warn  { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+  .flag.crit  { background: var(--crit-bg); color: var(--crit); border-color: var(--crit); }
+  .flag .ic { font-weight: 700; }
+
+  .overturn {
+    margin-top: 14px; padding: 11px 13px; border-radius: 6px;
+    background: var(--data-soft); border-left: 3px solid var(--data);
+    font-size: 13.5px; color: var(--ink);
+  }
+  .overturn b { font-weight: 600; }
+
+  /* ---------- bars ---------- */
+  .legend {
+    display: flex; gap: 16px; align-items: center;
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-3);
+  }
+  .lg { display: inline-flex; align-items: center; gap: 6px; }
+  .lg .sw-fill { width: 16px; height: 9px; border-radius: 2px; background: var(--data); }
+  .lg .sw-tick { width: 2px; height: 13px; background: var(--data-ghost); }
+
+  .bars { display: flex; flex-direction: column; gap: 3px; padding: 4px 0; }
+  .row {
+    display: grid; grid-template-columns: 148px minmax(0,1fr) 52px 54px;
+    align-items: center; gap: 12px; padding: 7px 4px; border-radius: 5px;
+  }
+  @media (max-width: 620px) { .row { grid-template-columns: 112px minmax(0,1fr) 46px 48px; gap: 8px; } }
+  .row.win { background: var(--surface-2); }
+  .hyp {
+    font-size: 13.5px; color: var(--ink-2); overflow-wrap: anywhere;
+  }
+  .row.win .hyp { color: var(--ink); font-weight: 600; }
+
+  .track {
+    position: relative; height: 22px; background: var(--surface-2);
+    border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+  }
+  .fill {
+    position: absolute; inset: 0 auto 0 0; background: var(--data);
+    border-radius: 3px 4px 4px 3px; opacity: .5;
+    transition: width .32s cubic-bezier(.4,0,.2,1);
+  }
+  .row.win .fill { opacity: 1; }
+  .tick {
+    position: absolute; top: -1px; bottom: -1px; width: 2px;
+    background: var(--data-ghost); transition: left .32s cubic-bezier(.4,0,.2,1);
+  }
+  .tick::after {
+    content: ""; position: absolute; top: -3px; left: -2px;
+    border-left: 3px solid transparent; border-right: 3px solid transparent;
+    border-top: 4px solid var(--data-ghost);
+  }
+  .num {
+    font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums;
+    font-size: 13px; text-align: right; color: var(--ink-2);
+  }
+  .row.win .num { color: var(--ink); font-weight: 600; }
+  .delta {
+    font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums;
+    font-size: 12px; text-align: right;
+  }
+  .delta.up { color: var(--good); }
+  .delta.dn { color: var(--ink-3); }
+  .delta.flat { color: var(--ink-3); opacity: .5; }
+
+  /* ---------- evidence ---------- */
+  .ev { display: flex; flex-direction: column; gap: 0; }
+  .ev-item {
+    display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 11px;
+    padding: 10px 0; border-bottom: 1px dashed var(--line);
+  }
+  .ev-item:last-child { border-bottom: 0; }
+  .ev-mark {
+    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 15px;
+    line-height: 1.3; text-align: center;
+  }
+  .ev-mark.sup { color: var(--good); }
+  .ev-mark.con { color: var(--crit); }
+  .ev-sig {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .ev-obs { font-size: 14px; color: var(--ink); margin: 1px 0 2px; }
+  .ev-eff { font-size: 12.5px; color: var(--ink-2); }
+  .ev-eff em { font-style: normal; font-weight: 600; color: var(--ink); }
+
+  .note {
+    display: grid; grid-template-columns: 18px minmax(0,1fr); gap: 10px;
+    padding: 11px 13px; border-radius: 6px; font-size: 13.5px; margin-top: 8px;
+  }
+  .note.warn { background: var(--warn-bg); color: var(--ink); border-left: 3px solid var(--warn); }
+  .note .ic { color: var(--warn); font-weight: 700; text-align: center; }
+
+  .empty { color: var(--ink-3); font-size: 13.5px; font-style: italic; padding: 10px 0; }
+
+  footer {
+    margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line);
+    color: var(--ink-3); font-size: 12.5px; max-width: 78ch;
+  }
+  footer code {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    padding: 1px 5px; border-radius: 3px; color: var(--ink-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="masthead">
+    <p class="eyebrow">SIH PS 26180 · Cotton · Sensor–vision fusion</p>
+    <h1>The camera can't tell. The soil can.</h1>
+    <p class="thesis">
+      Cotton leaf chlorosis looks the same whether the cause is <b>nitrogen deficiency</b>,
+      <b>water stress</b>, or a virus. That isn't a weak model — one RGB frame doesn't carry
+      the information. A three-day soil-moisture history does. Hold the leaf image fixed,
+      change the field, and watch the recommendation change with it.
+    </p>
+  </div>
+
+  <div class="panel">
+
+    <!-- ============ CONTROLS ============ -->
+    <div class="card">
+      <div class="card-hd"><h2>The field</h2></div>
+      <div class="card-bd">
+
+        <div>
+          <div class="field-label"><label for="vis">What the camera sees</label></div>
+          <select id="vis"></select>
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+          <div class="field-label"><span>Recorded conditions</span></div>
+          <div class="chips" id="scen"></div>
+        </div>
+
+        <div>
+          <div class="field-label">
+            <label for="moist">Soil moisture</label><span class="v" id="moist-v"></span>
+          </div>
+          <input type="range" id="moist" min="5" max="60" step="1">
+        </div>
+
+        <div>
+          <div class="field-label">
+            <label for="trend">Moisture trend</label><span class="v" id="trend-v"></span>
+          </div>
+          <input type="range" id="trend" min="-80" max="20" step="1">
+        </div>
+
+        <div>
+          <div class="field-label">
+            <label for="temp">Peak temperature</label><span class="v" id="temp-v"></span>
+          </div>
+          <input type="range" id="temp" min="20" max="50" step="1">
+        </div>
+
+        <div>
+          <div class="field-label">
+            <label for="hum">Mean humidity</label><span class="v" id="hum-v"></span>
+          </div>
+          <input type="range" id="hum" min="20" max="100" step="1">
+        </div>
+
+        <div>
+          <div class="field-label">
+            <label for="irr">Since irrigation</label><span class="v" id="irr-v"></span>
+          </div>
+          <input type="range" id="irr" min="0" max="200" step="4">
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+          <div class="field-label">
+            <label for="drop">Reading dropout</label><span class="v" id="drop-v"></span>
+          </div>
+          <input type="range" id="drop" min="0" max="100" step="2">
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="stuck">
+          <span><b>Soil probe stuck</b>
+          Dead, but still reporting its last value. Every reading present, in range,
+          and the trend a clean zero.</span>
+        </label>
+
+      </div>
+    </div>
+
+    <!-- ============ READOUT ============ -->
+    <div class="card">
+      <div class="verdict">
+        <div class="verdict-top">Diagnosis after fusion</div>
+        <p class="dx"><span id="dx-name">—</span><span class="pct" id="dx-pct"></span></p>
+        <p class="action">Recommended action: <b id="dx-action">—</b></p>
+        <div class="flags" id="flags"></div>
+        <div id="overturn"></div>
+      </div>
+
+      <div class="card-hd">
+        <h2>Where the confidence moved</h2>
+        <div class="legend">
+          <span class="lg"><span class="sw-fill"></span>after fusion</span>
+          <span class="lg"><span class="sw-tick"></span>camera alone</span>
+        </div>
+      </div>
+      <div class="card-bd" style="gap:0">
+        <div class="bars" id="bars"></div>
+      </div>
+
+      <div class="card-hd"><h2>Why — every step traced to a measurement</h2></div>
+      <div class="card-bd" style="gap:0">
+        <div class="ev" id="ev"></div>
+        <div id="notes"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Faithful port of <code>iot/fusion/engine.py</code> — same thresholds, same likelihoods,
+    same degraded-mode damping and decision margin. Thresholds are general cotton agronomy,
+    <b>not calibrated field constants</b>; no field-accuracy claim is defensible until
+    per-soil calibration is done. Recommendations are advisory only — nothing here actuates
+    a pump or a sprayer.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var CFG = {
+    moistureStress: 20, moistureAdequate: 28, moistureWaterlogged: 45,
+    dryingTrend: -3, heatStress: 38, blightHumidity: 80, whiteflyTemp: 30,
+    minMargin: 0.15, maxDropout: 0.30, degradedInfluence: 0.25
+  };
+
+  var H = ["water_stress", "nitrogen_deficiency", "leaf_curl_virus", "bacterial_blight", "healthy"];
+  var LABEL = {
+    water_stress: "water stress",
+    nitrogen_deficiency: "nitrogen deficiency",
+    leaf_curl_virus: "leaf curl virus",
+    bacterial_blight: "bacterial blight",
+    healthy: "healthy"
+  };
+  var ACTION = {
+    healthy: "no action",
+    water_stress: "irrigate",
+    nitrogen_deficiency: "soil test, then nitrogen application",
+    leaf_curl_virus: "whitefly vector control, rogue infected plants",
+    bacterial_blight: "copper-based spray, avoid overhead irrigation"
+  };
+
+  var VISION = [
+    { id: "amb", name: "Yellowing leaf — genuinely ambiguous",
+      s: { nitrogen_deficiency: .41, water_stress: .37, leaf_curl_virus: .13, bacterial_blight: .06, healthy: .03 } },
+    { id: "les", name: "Angular water-soaked lesions",
+      s: { bacterial_blight: .55, leaf_curl_virus: .15, nitrogen_deficiency: .12, water_stress: .10, healthy: .08 } },
+    { id: "curl", name: "Curled, thickened upper leaves",
+      s: { leaf_curl_virus: .48, nitrogen_deficiency: .20, water_stress: .16, bacterial_blight: .10, healthy: .06 } },
+    { id: "ok", name: "Uniform green canopy",
+      s: { healthy: .72, nitrogen_deficiency: .11, water_stress: .09, leaf_curl_virus: .05, bacterial_blight: .03 } }
+  ];
+
+  var SCEN = [
+    { id: "drying",  label: "drying down",    m: 21, t: -4.5, T: 43, h: 42, i: 120, d: 0,   k: false },
+    { id: "watered", label: "well watered",   m: 32, t: -0.6, T: 37, h: 55, i: 20,  d: 0,   k: false },
+    { id: "humid",   label: "humid spell",    m: 41, t: -0.3, T: 32, h: 86, i: 48,  d: 0,   k: false },
+    { id: "wet",     label: "waterlogged",    m: 52, t: -1.2, T: 31, h: 88, i: 8,   d: 0,   k: false },
+    { id: "failing", label: "failing sensor", m: 14, t: -3.0, T: 42, h: 45, i: 90,  d: 44,  k: false },
+    { id: "dead",    label: "dead probe",     m: 29, t:  0.0, T: 44, h: 40, i: 110, d: 0,   k: true  }
+  ];
+
+  // ---- fusion engine, ported from iot/fusion/engine.py ----------------------
+
+  function likelihood(hyp, w) {
+    var f = 1, ev = [];
+    function add(sig, obs, dir, wt) { ev.push({ sig: sig, obs: obs, hyp: hyp, dir: dir, w: wt }); }
+
+    var m = w.moisture, tr = w.trend, T = w.temp, hu = w.humidity, ir = w.irrigation;
+
+    if (hyp === "water_stress") {
+      if (m !== null) {
+        if (m < CFG.moistureStress) { f *= 2.5; add("soil moisture", m.toFixed(0) + "% — below the " + CFG.moistureStress + "% stress threshold", "supports", 2.5); }
+        else if (m > CFG.moistureAdequate) { f *= 0.3; add("soil moisture", m.toFixed(0) + "% — adequate", "contradicts", 0.3); }
+      }
+      if (tr !== null && tr < CFG.dryingTrend) { f *= 1.8; add("moisture trend", "falling " + Math.abs(tr).toFixed(1) + "%/day", "supports", 1.8); }
+      if (T !== null && T > CFG.heatStress) { f *= 1.4; add("peak temperature", T.toFixed(0) + "°C — above the " + CFG.heatStress + "°C heat-stress threshold", "supports", 1.4); }
+      if (ir !== null && ir > 96) { f *= 1.5; add("irrigation history", ir.toFixed(0) + "h since last irrigation", "supports", 1.5); }
+    }
+
+    if (hyp === "nitrogen_deficiency") {
+      if (m !== null) {
+        if (m > CFG.moistureAdequate) { f *= 2.0; add("soil moisture", m.toFixed(0) + "% adequate, so symptoms are not water-driven", "supports", 2.0); }
+        else if (m < CFG.moistureStress) { f *= 0.5; add("soil moisture", m.toFixed(0) + "% — water stress is the simpler explanation", "contradicts", 0.5); }
+      }
+      if (tr !== null && Math.abs(tr) < 1.5) { f *= 1.4; add("moisture trend", "stable (" + (tr >= 0 ? "+" : "") + tr.toFixed(1) + "%/day), consistent with a slow nutrient issue", "supports", 1.4); }
+    }
+
+    if (hyp === "leaf_curl_virus") {
+      if (T !== null && hu !== null && T > CFG.whiteflyTemp && hu < CFG.blightHumidity) {
+        f *= 1.6; add("vector conditions", T.toFixed(0) + "°C with " + hu.toFixed(0) + "% humidity favours whitefly activity", "supports", 1.6);
+      }
+      if (m !== null && m > CFG.moistureAdequate) { f *= 1.2; add("soil moisture", m.toFixed(0) + "% adequate, so symptoms are not water-driven", "supports", 1.2); }
+    }
+
+    if (hyp === "bacterial_blight") {
+      if (hu !== null) {
+        if (hu > CFG.blightHumidity) { f *= 2.0; add("humidity", hu.toFixed(0) + "% sustained — favourable for bacterial spread", "supports", 2.0); }
+        else if (hu < 50) { f *= 0.5; add("humidity", hu.toFixed(0) + "% — too dry for bacterial spread", "contradicts", 0.5); }
+      }
+      if (m !== null && m > CFG.moistureWaterlogged) { f *= 1.5; add("soil moisture", m.toFixed(0) + "% waterlogged, prolonging leaf wetness", "supports", 1.5); }
+    }
+
+    if (hyp === "healthy") {
+      var okM = m !== null && m >= CFG.moistureAdequate && m <= CFG.moistureWaterlogged;
+      var okT = T !== null && T < CFG.heatStress;
+      if (okM && okT) { f *= 1.3; add("field conditions", "moisture " + m.toFixed(0) + "% and peak " + T.toFixed(0) + "°C both in normal range", "supports", 1.3); }
+    }
+
+    return { f: f, ev: ev };
+  }
+
+  function diagnose(prior, w) {
+    var notes = [];
+    var degraded = w.dropout > CFG.maxDropout || w.stuck;
+
+    if (w.dropout > CFG.maxDropout) {
+      notes.push("Sensor window " + Math.round(w.dropout * 100) + "% incomplete — sensor influence reduced to "
+        + Math.round(CFG.degradedInfluence * 100) + "%.");
+    }
+    if (w.stuck) {
+      notes.push("Stuck sensor detected (soil_moisture_pct): readings unchanging. "
+        + "The channel is excluded and the probe needs service.");
+    }
+
+    var mult = {}, ev = [];
+    H.forEach(function (h) {
+      var r = likelihood(h, w);
+      mult[h] = r.f;
+      ev = ev.concat(r.ev);
+    });
+
+    if (degraded) {
+      H.forEach(function (h) { mult[h] = 1 + (mult[h] - 1) * CFG.degradedInfluence; });
+    }
+
+    var post = {}, sum = 0;
+    H.forEach(function (h) { post[h] = prior[h] * mult[h]; sum += post[h]; });
+    if (sum <= 0) { H.forEach(function (h) { post[h] = prior[h]; }); sum = 1;
+      notes.push("Sensor evidence contradicted every hypothesis; falling back to the camera alone."); }
+    H.forEach(function (h) { post[h] = post[h] / sum; });
+
+    var rank = H.slice().sort(function (a, b) { return post[b] - post[a]; });
+    var margin = post[rank[0]] - post[rank[1]];
+    var review = margin < CFG.minMargin;
+    if (review) {
+      notes.push("Top-two margin " + margin.toFixed(2) + " is below " + CFG.minMargin.toFixed(2)
+        + " — not committing to a single cause.");
+    }
+
+    var vRank = H.slice().sort(function (a, b) { return prior[b] - prior[a]; });
+
+    return {
+      post: post, top: rank[0], conf: post[rank[0]], margin: margin,
+      visionTop: vRank[0], visionConf: prior[vRank[0]],
+      evidence: ev.filter(function (e) { return e.hyp === rank[0] || e.hyp === vRank[0]; })
+                  .sort(function (a, b) { return Math.abs(Math.log(b.w)) - Math.abs(Math.log(a.w)); }),
+      degraded: degraded, review: review, notes: notes
+    };
+  }
+
+  // ---- wiring --------------------------------------------------------------
+
+  var $ = function (id) { return document.getElementById(id); };
+  var els = {
+    vis: $("vis"), scen: $("scen"),
+    moist: $("moist"), trend: $("trend"), temp: $("temp"), hum: $("hum"),
+    irr: $("irr"), drop: $("drop"), stuck: $("stuck")
+  };
+
+  VISION.forEach(function (v) {
+    var o = document.createElement("option");
+    o.value = v.id; o.textContent = v.name;
+    els.vis.appendChild(o);
+  });
+
+  SCEN.forEach(function (s) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = s.label;
+    b.setAttribute("aria-pressed", "false");
+    b.dataset.id = s.id;
+    b.addEventListener("click", function () { applyScenario(s); });
+    els.scen.appendChild(b);
+  });
+
+  function applyScenario(s) {
+    els.moist.value = s.m;
+    els.trend.value = Math.round(s.t * 10);
+    els.temp.value = s.T;
+    els.hum.value = s.h;
+    els.irr.value = s.i;
+    els.drop.value = s.d;
+    els.stuck.checked = s.k;
+    render(s.id);
+  }
+
+  function readWindow() {
+    var stuck = els.stuck.checked;
+    var drop = +els.drop.value / 100;
+    return {
+      // A stuck channel is excluded outright: the value is in range and
+      // present, but it is not a measurement.
+      moisture: stuck ? null : +els.moist.value,
+      trend: stuck ? null : +els.trend.value / 10,
+      temp: +els.temp.value,
+      humidity: +els.hum.value,
+      irrigation: +els.irr.value,
+      dropout: drop, stuck: stuck
+    };
+  }
+
+  function pct(x) { return Math.round(x * 100) + "%"; }
+
+  function render(activeScenario) {
+    var w = readWindow();
+    var prior = VISION.filter(function (v) { return v.id === els.vis.value; })[0].s;
+    var d = diagnose(prior, w);
+
+    // control readouts
+    $("moist-v").textContent = w.stuck ? "excluded" : w.moisture + "%";
+    $("trend-v").textContent = w.stuck ? "excluded" : (w.trend >= 0 ? "+" : "") + w.trend.toFixed(1) + " %/day";
+    $("temp-v").textContent = w.temp + " °C";
+    $("hum-v").textContent = w.humidity + "%";
+    $("irr-v").textContent = w.irrigation + " h";
+    $("drop-v").textContent = Math.round(w.dropout * 100) + "%";
+
+    Array.prototype.forEach.call(els.scen.children, function (b) {
+      b.setAttribute("aria-pressed", b.dataset.id === activeScenario ? "true" : "false");
+    });
+
+    // verdict
+    $("dx-name").textContent = d.review ? "Not conclusive" : LABEL[d.top];
+    $("dx-pct").textContent = d.review ? "" : pct(d.conf);
+    $("dx-action").textContent = d.review
+      ? "inspect manually — evidence is not conclusive"
+      : ACTION[d.top];
+
+    var flags = [];
+    if (d.review) flags.push(['warn', '!', 'needs human review']);
+    else flags.push(['ok', '✓', 'committed']);
+    if (w.stuck) flags.push(['crit', '✕', 'probe stuck']);
+    if (d.degraded && !w.stuck) flags.push(['warn', '!', 'degraded input']);
+    $("flags").innerHTML = flags.map(function (f) {
+      return '<span class="flag ' + f[0] + '"><span class="ic">' + f[1] + '</span>' + f[2] + '</span>';
+    }).join("");
+
+    var ot = $("overturn");
+    if (d.top !== d.visionTop && !d.review) {
+      ot.innerHTML = '<div class="overturn">The sensors <b>overturned the camera</b>. On the image alone this reads as <b>'
+        + LABEL[d.visionTop] + '</b> (' + pct(d.visionConf) + ') — which would have meant "'
+        + ACTION[d.visionTop] + '".</div>';
+    } else if (d.top === d.visionTop && !d.review) {
+      ot.innerHTML = '<div class="overturn">The sensors <b>agreed with the camera</b> and sharpened a '
+        + pct(d.visionConf) + ' call into ' + pct(d.conf) + '.</div>';
+    } else {
+      ot.innerHTML = "";
+    }
+
+    // bars
+    $("bars").innerHTML = H.slice().sort(function (a, b) { return d.post[b] - d.post[a]; })
+      .map(function (h) {
+        var p = d.post[h], q = prior[h], dd = Math.round((p - q) * 100);
+        var cls = dd > 0 ? "up" : (dd < 0 ? "dn" : "flat");
+        var sign = dd > 0 ? "▲" : (dd < 0 ? "▼" : "·");
+        return '<div class="row' + (h === d.top && !d.review ? ' win' : '') + '">'
+          + '<div class="hyp">' + LABEL[h] + '</div>'
+          + '<div class="track"><div class="fill" style="width:' + (p * 100).toFixed(1) + '%"></div>'
+          + '<div class="tick" style="left:' + (q * 100).toFixed(1) + '%"></div></div>'
+          + '<div class="num">' + pct(p) + '</div>'
+          + '<div class="delta ' + cls + '">' + sign + " " + Math.abs(dd) + '</div>'
+          + '</div>';
+      }).join("");
+
+    // evidence
+    $("ev").innerHTML = d.evidence.length
+      ? d.evidence.slice(0, 5).map(function (e) {
+          var sup = e.dir === "supports";
+          return '<div class="ev-item">'
+            + '<div class="ev-mark ' + (sup ? "sup" : "con") + '">' + (sup ? "+" : "−") + '</div>'
+            + '<div><div class="ev-sig">' + e.sig + '</div>'
+            + '<div class="ev-obs">' + e.obs + '</div>'
+            + '<div class="ev-eff">' + e.dir + ' <em>' + LABEL[e.hyp] + '</em> · ×' + e.w + '</div></div>'
+            + '</div>';
+        }).join("")
+      : '<p class="empty">No sensor evidence bears on this diagnosis — the camera is on its own.</p>';
+
+    $("notes").innerHTML = d.notes.map(function (n) {
+      return '<div class="note warn"><span class="ic">!</span><span>' + n + '</span></div>';
+    }).join("");
+  }
+
+  ["vis", "moist", "trend", "temp", "hum", "irr", "drop", "stuck"].forEach(function (k) {
+    els[k].addEventListener("input", function () { render(null); });
+  });
+
+  applyScenario(SCEN[0]);
+})();
+</script>

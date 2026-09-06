@@ -1,0 +1,21 @@
+{
+  "task": "pest_damage",
+  "classes": [
+    "Dead Heart",
+    "Hispa",
+    "No Pest Damage"
+  ],
+  "fp32": {
+    "path": "kisannetra_pest_fp32.onnx",
+    "size_mb": 5.811066627502441,
+    "accuracy": 0.9497907949790795
+  },
+  "int8": {
+    "attempted": true,
+    "size_mb": 1.6415481567382812,
+    "accuracy": 0.3458856345885635,
+    "status": "FAILED_ACCURACY_COLLAPSE",
+    "artifact": "kisannetra_pest_int8.BROKEN_35pct.onnx"
+  },
+  "hardware_note": "Software-only validation. No Qualcomm NPU profiling was performed."
+}

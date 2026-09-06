@@ -1,0 +1,59 @@
+{
+  "task": "pest_damage",
+  "artifact_verified": "kisannetra_pest_fp32.onnx",
+  "classes_source": "pest_classes.json",
+  "classes": [
+    "Dead Heart",
+    "Hispa",
+    "No Pest Damage"
+  ],
+  "n_test": 717,
+  "reproduced_accuracy": 0.9497907949790795,
+  "reproduced_wilson_95_ci": [
+    0.9312725410030739,
+    0.9635148852497949
+  ],
+  "step4_reported_accuracy": 0.9497907949790795,
+  "per_class_recall": {
+    "Dead Heart": {
+      "support": 215,
+      "recall": 0.986046511627907
+    },
+    "Hispa": {
+      "support": 239,
+      "recall": 0.9539748953974896
+    },
+    "No Pest Damage": {
+      "support": 263,
+      "recall": 0.9163498098859315
+    }
+  },
+  "checks": [
+    {
+      "check": "ONNX output width equals len(pest_classes.json)",
+      "pass": true,
+      "detail": "model=3 classes.json=3"
+    },
+    {
+      "check": "test directories match the loaded class list exactly",
+      "pass": true,
+      "detail": "disk=['Dead Heart', 'Hispa', 'No Pest Damage'] classes.json=['Dead Heart', 'Hispa', 'No Pest Damage']"
+    },
+    {
+      "check": "step 4 metrics use the same class list",
+      "pass": true,
+      "detail": "metrics=['Dead Heart', 'Hispa', 'No Pest Damage'] classes.json=['Dead Heart', 'Hispa', 'No Pest Damage']"
+    },
+    {
+      "check": "reproduced accuracy within 0.5pp of step 4",
+      "pass": true,
+      "detail": "reproduced=94.98% step4=94.98%"
+    },
+    {
+      "check": "every class recall is above chance",
+      "pass": true,
+      "detail": "worst=91.63% chance=33.33%"
+    }
+  ],
+  "verdict": "PASS"
+}

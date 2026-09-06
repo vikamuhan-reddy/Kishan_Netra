@@ -1,0 +1,365 @@
+{
+  "status": "completed",
+  "model": "best_model.pth",
+  "device": "cuda:0",
+  "protocol": {
+    "statistical_confidence": {
+      "accuracy": 0.877,
+      "wilson_95_ci": [
+        0.8551883398130525,
+        0.8959261786528091
+      ],
+      "bootstrap_mean_accuracy": 0.876752,
+      "bootstrap_95_ci": [
+        0.856,
+        0.896525
+      ]
+    },
+    "calibration": {
+      "ece": 0.03685596024990079
+    },
+    "confusion_analysis": {
+      "macro_f1": 0.8626697440827996,
+      "major_confusions": [
+        {
+          "true_class": 2,
+          "pred_class": 1,
+          "count": 22
+        },
+        {
+          "true_class": 1,
+          "pred_class": 4,
+          "count": 19
+        },
+        {
+          "true_class": 2,
+          "pred_class": 0,
+          "count": 12
+        },
+        {
+          "true_class": 2,
+          "pred_class": 4,
+          "count": 11
+        },
+        {
+          "true_class": 0,
+          "pred_class": 4,
+          "count": 9
+        },
+        {
+          "true_class": 4,
+          "pred_class": 1,
+          "count": 9
+        },
+        {
+          "true_class": 1,
+          "pred_class": 0,
+          "count": 8
+        },
+        {
+          "true_class": 0,
+          "pred_class": 1,
+          "count": 6
+        },
+        {
+          "true_class": 3,
+          "pred_class": 4,
+          "count": 4
+        },
+        {
+          "true_class": 1,
+          "pred_class": 2,
+          "count": 3
+        }
+      ],
+      "confusion_matrix": [
+        [
+          91,
+          6,
+          0,
+          0,
+          9
+        ],
+        [
+          8,
+          258,
+          3,
+          3,
+          19
+        ],
+        [
+          12,
+          22,
+          112,
+          2,
+          11
+        ],
+        [
+          2,
+          3,
+          3,
+          251,
+          4
+        ],
+        [
+          1,
+          9,
+          3,
+          3,
+          165
+        ]
+      ],
+      "classes": [
+        "Bacterial Blight",
+        "Blast",
+        "Brown Spot",
+        "Healthy",
+        "Tungro"
+      ]
+    },
+    "independent_reproduction": {
+      "passed": true,
+      "issues": [],
+      "recorded_metrics": {
+        "lab_acc": 0.7777777777777778,
+        "field_acc": 0.8879023307436182,
+        "gap": -0.11012455296584045,
+        "macro_f1": 0.8626697440827996,
+        "classes": [
+          "Bacterial Blight",
+          "Blast",
+          "Brown Spot",
+          "Healthy",
+          "Tungro"
+        ],
+        "confusion_matrix": [
+          [
+            91,
+            6,
+            0,
+            0,
+            9
+          ],
+          [
+            8,
+            258,
+            3,
+            3,
+            19
+          ],
+          [
+            12,
+            22,
+            112,
+            2,
+            11
+          ],
+          [
+            2,
+            3,
+            3,
+            251,
+            4
+          ],
+          [
+            1,
+            9,
+            3,
+            3,
+            165
+          ]
+        ]
+      },
+      "computed_metrics": {
+        "lab_acc": 0.7777777777777778,
+        "field_acc": 0.8879023307436182,
+        "gap": -0.11012455296584045,
+        "macro_f1": 0.8626697440827996,
+        "classes": [
+          "Bacterial Blight",
+          "Blast",
+          "Brown Spot",
+          "Healthy",
+          "Tungro"
+        ],
+        "confusion_matrix": [
+          [
+            91,
+            6,
+            0,
+            0,
+            9
+          ],
+          [
+            8,
+            258,
+            3,
+            3,
+            19
+          ],
+          [
+            12,
+            22,
+            112,
+            2,
+            11
+          ],
+          [
+            2,
+            3,
+            3,
+            251,
+            4
+          ],
+          [
+            1,
+            9,
+            3,
+            3,
+            165
+          ]
+        ]
+      }
+    },
+    "perturbation_robustness": {
+      "_clean_baseline": {
+        "accuracy": 0.8675,
+        "wilson_95_ci": [
+          0.830752941175613,
+          0.8972552679836218
+        ],
+        "samples": 400,
+        "note": "Unperturbed accuracy on the same sample; drops are measured against this."
+      },
+      "blur": {
+        "accuracy": 0.69,
+        "wilson_95_ci": [
+          0.6430481575959021,
+          0.7333370389762192
+        ],
+        "drop_vs_clean": 0.1775000000000001,
+        "samples": 400
+      },
+      "brightness_low": {
+        "accuracy": 0.8525,
+        "wilson_95_ci": [
+          0.8143991454822668,
+          0.8838944428949584
+        ],
+        "drop_vs_clean": 0.015000000000000013,
+        "samples": 400
+      },
+      "contrast_high": {
+        "accuracy": 0.8675,
+        "wilson_95_ci": [
+          0.830752941175613,
+          0.8972552679836218
+        ],
+        "drop_vs_clean": 0.0,
+        "samples": 400
+      },
+      "rotation_10deg": {
+        "accuracy": 0.8675,
+        "wilson_95_ci": [
+          0.830752941175613,
+          0.8972552679836218
+        ],
+        "drop_vs_clean": 0.0,
+        "samples": 400
+      }
+    },
+    "rule_engine_checks": [
+      {
+        "name": "irrigation_dry_soil_uses_irrigate",
+        "passed": true,
+        "detail": {
+          "action": "IRRIGATE",
+          "reason": [
+            "Surface moisture 15% below threshold (22.0%).",
+            "Root-zone moisture 12% below threshold (16.0%)."
+          ],
+          "confidence": "HIGH",
+          "blocked": false,
+          "flow_alert": "Valve commanded but flow_lpm<0.5 or missing \u2014 possible blockage. VERIFY MANUALLY."
+        }
+      },
+      {
+        "name": "rain_blocks_irrigation",
+        "passed": true,
+        "detail": {
+          "action": "HOLD",
+          "reason": [
+            "Active rainfall detected \u2014 irrigation not needed."
+          ],
+          "confidence": "HIGH",
+          "blocked": false,
+          "flow_alert": null
+        }
+      },
+      {
+        "name": "nutrient_shortage_flags_are_emitted",
+        "passed": true,
+        "detail": [
+          {
+            "nutrient": "EC",
+            "level": "HIGH",
+            "message": "EC 2.5 dS/m indicates salt stress. Check drainage.",
+            "confidence": "HIGH"
+          },
+          {
+            "nutrient": "N",
+            "level": "LOW",
+            "message": "N is 25 mg/kg. Apply urea top-dressing.",
+            "confidence": "HIGH"
+          },
+          {
+            "nutrient": "P",
+            "level": "LOW",
+            "message": "P is 10 mg/kg. Basal application likely insufficient.",
+            "confidence": "HIGH"
+          },
+          {
+            "nutrient": "K",
+            "level": "LOW",
+            "message": "K is 20 mg/kg. Essential for disease resistance. Apply MOP.",
+            "confidence": "HIGH"
+          }
+        ]
+      },
+      {
+        "name": "disease_fusion_high_and_healthy_ranges",
+        "passed": true,
+        "detail": {
+          "blast": {
+            "predicted": "Blast",
+            "visual_confidence": 0.85,
+            "final_risk": "HIGH",
+            "factors": [
+              "Environmental corroboration: humidity 90% \u2265 85% and temp 28\u00b0C in (24, 32) risk range."
+            ],
+            "image_quality": "GOOD",
+            "adjusted_visual_confidence": 0.85
+          },
+          "healthy": {
+            "predicted": "Healthy",
+            "visual_confidence": 0.99,
+            "final_risk": "NONE",
+            "factors": [
+              "Model predicts healthy crop."
+            ],
+            "image_quality": "GOOD"
+          }
+        }
+      }
+    ],
+    "regression_lock": {
+      "passed": true,
+      "reason": "class ordering and model output dimension are consistent"
+    },
+    "overall_notes": {
+      "lab_accuracy": 0.7777777777777778,
+      "field_accuracy": 0.8879023307436182,
+      "lab_minus_field_gap": -0.11012455296584045
+    }
+  }
+}

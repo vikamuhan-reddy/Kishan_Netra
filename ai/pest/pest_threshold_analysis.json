@@ -1,0 +1,76 @@
+{
+  "task": "pest_damage",
+  "classes": [
+    "Dead Heart",
+    "Hispa",
+    "No Pest Damage"
+  ],
+  "negative_class": "No Pest Damage",
+  "n_test": 717,
+  "sweep": [
+    {
+      "threshold": 0.0,
+      "false_alert_rate": 0.08365019011406843,
+      "false_alerts": 22,
+      "pest_recall": 0.9691629955947136,
+      "inconclusive_rate": 0.0,
+      "accuracy_on_decided": 0.9497907949790795
+    },
+    {
+      "threshold": 0.5,
+      "false_alert_rate": 0.07984790874524715,
+      "false_alerts": 21,
+      "pest_recall": 0.9691629955947136,
+      "inconclusive_rate": 0.005578800557880056,
+      "accuracy_on_decided": 0.9537166900420757
+    },
+    {
+      "threshold": 0.6,
+      "false_alert_rate": 0.06463878326996197,
+      "false_alerts": 17,
+      "pest_recall": 0.9581497797356828,
+      "inconclusive_rate": 0.03347280334728033,
+      "accuracy_on_decided": 0.963924963924964
+    },
+    {
+      "threshold": 0.7,
+      "false_alert_rate": 0.053231939163498096,
+      "false_alerts": 14,
+      "pest_recall": 0.933920704845815,
+      "inconclusive_rate": 0.06555090655509066,
+      "accuracy_on_decided": 0.9701492537313433
+    },
+    {
+      "threshold": 0.8,
+      "false_alert_rate": 0.030418250950570342,
+      "false_alerts": 8,
+      "pest_recall": 0.9030837004405287,
+      "inconclusive_rate": 0.11157601115760112,
+      "accuracy_on_decided": 0.9827315541601256
+    },
+    {
+      "threshold": 0.9,
+      "false_alert_rate": 0.0076045627376425855,
+      "false_alerts": 2,
+      "pest_recall": 0.8370044052863436,
+      "inconclusive_rate": 0.18828451882845187,
+      "accuracy_on_decided": 0.9965635738831615
+    },
+    {
+      "threshold": 0.95,
+      "false_alert_rate": 0.0076045627376425855,
+      "false_alerts": 2,
+      "pest_recall": 0.775330396475771,
+      "inconclusive_rate": 0.26778242677824265,
+      "accuracy_on_decided": 0.9961904761904762
+    },
+    {
+      "threshold": 0.99,
+      "false_alert_rate": 0.0038022813688212928,
+      "false_alerts": 1,
+      "pest_recall": 0.5770925110132159,
+      "inconclusive_rate": 0.4769874476987448,
+      "accuracy_on_decided": 0.9973333333333333
+    }
+  ]
+}

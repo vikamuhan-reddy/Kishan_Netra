@@ -1,0 +1,26 @@
+# KisanNetra — smart-farming-edge-ai
+# Full stack: training, evaluation, inference, testing.
+# Install into the project venv:
+#   pip install -r requirements.txt
+#
+# For the edge-device-only subset (no training deps) use ai/requirements.txt.
+
+# ── Core inference (edge + dashboard) ────────────────────────────────────────
+onnxruntime>=1.18.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# ── Model training (step3, step4, step5) ─────────────────────────────────────
+# CUDA build: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+# CPU-only:   pip install torch torchvision
+torch>=2.14.0
+torchvision>=0.19.0
+
+# ── Evaluation metrics ────────────────────────────────────────────────────────
+scikit-learn>=1.3.0
+
+# ── ONNX model inspection / export validation ────────────────────────────────
+onnx>=1.16.0
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.0.0

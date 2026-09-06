@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "author": "SIH PS 26180 - Smart Farm Sentinel",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+
+    {
+      "type": "wokwi-potentiometer",
+      "id": "soilA",
+      "top": -180,
+      "left": -240,
+      "attrs": { "value": "340" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "soilB",
+      "top": -180,
+      "left": -80,
+      "attrs": { "value": "300" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "tank",
+      "top": -180,
+      "left": 80,
+      "attrs": { "value": "700" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "vision",
+      "top": -180,
+      "left": 240,
+      "attrs": { "value": "120" }
+    },
+
+    {
+      "type": "wokwi-dht22",
+      "id": "dht",
+      "top": 30,
+      "left": -230,
+      "attrs": { "temperature": "34", "humidity": "62" }
+    },
+    {
+      "type": "wokwi-photoresistor-sensor",
+      "id": "ldr",
+      "top": 150,
+      "left": -230,
+      "attrs": {}
+    },
+
+    {
+      "type": "wokwi-ssd1306",
+      "id": "oled",
+      "top": 20,
+      "left": 250,
+      "attrs": { "i2cAddress": "0x3c" }
+    },
+
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btnRain",
+      "top": 250,
+      "left": -240,
+      "attrs": { "color": "blue", "label": "RAIN" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btnNet",
+      "top": 250,
+      "left": -110,
+      "attrs": { "color": "green", "label": "NET" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btnFault",
+      "top": 250,
+      "left": 20,
+      "attrs": { "color": "red", "label": "FAULT" }
+    },
+
+    {
+      "type": "wokwi-led",
+      "id": "ledValve",
+      "top": 190,
+      "left": 190,
+      "attrs": { "color": "blue", "label": "VALVE" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledAlert",
+      "top": 190,
+      "left": 260,
+      "attrs": { "color": "red", "label": "ALERT" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "ledEdge",
+      "top": 190,
+      "left": 330,
+      "attrs": { "color": "green", "label": "EDGE" }
+    },
+    { "type": "wokwi-resistor", "id": "r1", "top": 240, "left": 190, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": 240, "left": 260, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r3", "top": 240, "left": 330, "attrs": { "value": "220" } }
+  ],
+
+  "connections": [
+    [ "esp:3V3", "soilA:VCC", "red",   [ "v-8" ] ],
+    [ "esp:GND.1", "soilA:GND", "black", [ "v-8" ] ],
+    [ "soilA:SIG", "esp:D34", "green", [ "v-8" ] ],
+
+    [ "esp:3V3", "soilB:VCC", "red",   [ "v-12" ] ],
+    [ "esp:GND.1", "soilB:GND", "black", [ "v-12" ] ],
+    [ "soilB:SIG", "esp:D35", "green", [ "v-12" ] ],
+
+    [ "esp:3V3", "tank:VCC", "red",   [ "v-16" ] ],
+    [ "esp:GND.1", "tank:GND", "black", [ "v-16" ] ],
+    [ "tank:SIG", "esp:D32", "green", [ "v-16" ] ],
+
+    [ "esp:3V3", "vision:VCC", "red",   [ "v-20" ] ],
+    [ "esp:GND.1", "vision:GND", "black", [ "v-20" ] ],
+    [ "vision:SIG", "esp:D33", "green", [ "v-20" ] ],
+
+    [ "esp:3V3", "dht:VCC", "red",   [ "h-12" ] ],
+    [ "esp:GND.2", "dht:GND", "black", [ "h-12" ] ],
+    [ "dht:SDA", "esp:D15", "green", [ "h-12" ] ],
+
+    [ "esp:3V3", "ldr:VCC", "red",   [ "h-16" ] ],
+    [ "esp:GND.2", "ldr:GND", "black", [ "h-16" ] ],
+    [ "ldr:AO", "esp:VP", "green", [ "h-16" ] ],
+
+    [ "esp:3V3", "oled:VCC", "red",   [ "h-8" ] ],
+    [ "esp:GND.3", "oled:GND", "black", [ "h-8" ] ],
+    [ "esp:D21", "oled:SDA", "orange", [ "h-8" ] ],
+    [ "esp:D22", "oled:SCL", "yellow", [ "h-8" ] ],
+
+    [ "btnRain:1.l", "esp:GND.2", "black", [ "v-16" ] ],
+    [ "btnRain:2.l", "esp:D4", "blue", [ "v-16" ] ],
+
+    [ "btnNet:1.l", "esp:GND.2", "black", [ "v-20" ] ],
+    [ "btnNet:2.l", "esp:D5", "green", [ "v-20" ] ],
+
+    [ "btnFault:1.l", "esp:GND.2", "black", [ "v-24" ] ],
+    [ "btnFault:2.l", "esp:D13", "red", [ "v-24" ] ],
+
+    [ "esp:D18", "ledValve:A", "blue", [ "v-8" ] ],
+    [ "ledValve:C", "r1:1", "black", [ "v-4" ] ],
+    [ "r1:2", "esp:GND.3", "black", [ "v-8" ] ],
+
+    [ "esp:D19", "ledAlert:A", "red", [ "v-8" ] ],
+    [ "ledAlert:C", "r2:1", "black", [ "v-4" ] ],
+    [ "r2:2", "esp:GND.3", "black", [ "v-8" ] ],
+
+    [ "esp:D23", "ledEdge:A", "green", [ "v-8" ] ],
+    [ "ledEdge:C", "r3:1", "black", [ "v-4" ] ],
+    [ "r3:2", "esp:GND.3", "black", [ "v-8" ] ]
+  ],
+
+  "dependencies": {}
+}

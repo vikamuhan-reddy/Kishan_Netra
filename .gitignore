@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Generated CAD output - regenerate with the commands in hardware/cad/README.md
+*.stl
+*.3mf
+
+# OS
+Thumbs.db
+.DS_Store

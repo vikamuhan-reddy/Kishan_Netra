@@ -1,0 +1,11 @@
+# KisanNetra — ai/ edge-device requirements
+# Inference + testing only. No training dependencies.
+# This is what the edge device needs; use ../requirements.txt for the full stack.
+#
+# Install:
+#   pip install -r ai/requirements.txt
+
+onnxruntime>=1.18.0
+numpy>=1.24.0
+Pillow>=10.0.0
+pytest>=8.0.0

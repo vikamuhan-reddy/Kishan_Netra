@@ -1,0 +1,62 @@
+{
+  "task": "pest_damage",
+  "source": "C:\\Users\\vikam\\OneDrive\\Desktop\\Kishan_Netra\\paddy-disease-classification\\train_images",
+  "include_negative_class": true,
+  "raw_counts": {
+    "Hispa": 1594,
+    "Dead Heart": 1442,
+    "No Pest Damage": 1764
+  },
+  "duplicates_removed": {
+    "Hispa": 5,
+    "Dead Heart": 13,
+    "No Pest Damage": 15
+  },
+  "usable_counts": {
+    "Hispa": 1589,
+    "Dead Heart": 1429,
+    "No Pest Damage": 1749
+  },
+  "low_reliability_classes": [],
+  "condition": "field_only",
+  "splits": {
+    "train": {
+      "Hispa": {
+        "field": 1112
+      },
+      "Dead Heart": {
+        "field": 1000
+      },
+      "No Pest Damage": {
+        "field": 1224
+      }
+    },
+    "val": {
+      "Hispa": {
+        "field": 238
+      },
+      "Dead Heart": {
+        "field": 214
+      },
+      "No Pest Damage": {
+        "field": 262
+      }
+    },
+    "test": {
+      "Hispa": {
+        "field": 239
+      },
+      "Dead Heart": {
+        "field": 215
+      },
+      "No Pest Damage": {
+        "field": 263
+      }
+    }
+  },
+  "split_totals": {
+    "train": 3336,
+    "val": 714,
+    "test": 717
+  }
+}
